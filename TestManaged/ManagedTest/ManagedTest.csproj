@@ -32,8 +32,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ManagedCuda, Version=5.5.4971.26987, Culture=neutral, PublicKeyToken=242d898828717aa0, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="ManagedCuda">
       <HintPath>..\..\Managed\Debug\ManagedCuda.dll</HintPath>
     </Reference>
     <Reference Include="System" />

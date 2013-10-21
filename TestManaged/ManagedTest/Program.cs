@@ -15,8 +15,8 @@ namespace ManagedTest
         static void InitKernels()
         {
             CudaContext cntxt = new CudaContext();
-            var cumodule = cntxt.LoadModule(@"C:\CUDAKernels\kernel.ptx");
-            addWithCuda = new CudaKernel("_Z6kerneliiPi", cumodule, cntxt);
+            var cumodule = cntxt.LoadModule(@"..\..\..\TestManaged\Debug\kernel.ptx");
+            addWithCuda = new CudaKernel("kernel", cumodule, cntxt);
         }
 
         static Func<int, int, int> cudaAdd = (a, b) =>
