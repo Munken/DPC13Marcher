@@ -27,7 +27,7 @@ namespace MarcherLauncher
             CudaDeviceVariable<float3> result = new CudaDeviceVariable<float3>(N);
             CudaDeviceVariable<uint> count = new CudaDeviceVariable<uint>(N);
 
-            kernel.Run(iso, d, min, stepsize, result, count);
+            kernel.Run(iso, d, min, stepsize, result.DevicePointer, count.DevicePointer);
             
 
             // (float isoValue, dim3 dims, float3 minX, float3 dx, float3* out, uint* count)

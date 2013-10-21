@@ -102,7 +102,7 @@
       <Keep>true</Keep>
     </CudaCompile>
     <CudaCompile>
-      <NvccCompilation>cubin</NvccCompilation>
+      <NvccCompilation>compile</NvccCompilation>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

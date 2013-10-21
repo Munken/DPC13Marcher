@@ -10,8 +10,8 @@ namespace ManagedTest
 {
     class Program
     {
-        const int VECTOR_SIZE = 5120;
-        const int THREADS_PER_BLOCK = 256;
+        const int VECTOR_SIZE = 10;
+        const int THREADS_PER_BLOCK = 10;
 
         static CudaKernel fillVectorWithCuda;
 

@@ -11,6 +11,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Marcher", "Marcher\Marcher.vcxproj", "{2A2E439A-46EA-4A49-B2E1-245A9672B7CA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarcherLauncher", "MarcherLauncher\MarcherLauncher.csproj", "{CC79227D-06F4-496D-A853-B1CFD2FB818A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2A2E439A-46EA-4A49-B2E1-245A9672B7CA} = {2A2E439A-46EA-4A49-B2E1-245A9672B7CA}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -5,7 +5,8 @@ extern "C"
 {
 	__global__ void kernel(int *m, int v)
 	{
-     m[threadIdx.x + (blockDim.x * blockIdx.x)] = v;
+		int index = threadIdx.x + (blockDim.x * blockIdx.x);
+		m[index] = m[index] + v;
 	}
 }
  
