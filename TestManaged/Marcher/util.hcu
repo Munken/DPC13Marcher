@@ -1,0 +1,18 @@
+inline __host__ __device__ uint3 idx_to_co(uint idx, uint3 dim)
+{
+  uint3 co;
+  unsigned int temp = idx;
+  co.x = temp%dim.x;temp -= co.x;
+  co.y = (temp/(dim.x))%dim.y; temp -= co.y*dim.x;
+  co.z = temp/(dim.x*dim.y);
+  return co;
+}
+
+inline __host__ __device__ unsigned int co_to_idx(uint3 co, uint3 dim)
+{
+  return co.z*dim.x*dim.y + co.y*dim.x + co.x;
+}
+
+inline __host__ __device__ unsigned int prod(uint3 co) {
+	return co.x*co.y*co.z;
+}
