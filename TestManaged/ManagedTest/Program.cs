@@ -10,31 +10,38 @@ namespace ManagedTest
 {
     class Program
     {
-        static CudaKernel addWithCuda;
+        const int VECTOR_SIZE = 5120;
+        const int THREADS_PER_BLOCK = 256;
+
+        static CudaKernel fillVectorWithCuda;
 
         static void InitKernels()
         {
             CudaContext cntxt = new CudaContext();
             var cumodule = cntxt.LoadModule(@"..\..\..\TestManaged\Debug\kernel.ptx");
-            addWithCuda = new CudaKernel("kernel", cumodule, cntxt);
+            fillVectorWithCuda = new CudaKernel("kernel", cumodule, cntxt);
+            fillVectorWithCuda.BlockDimensions = THREADS_PER_BLOCK;
+            fillVectorWithCuda.GridDimensions = VECTOR_SIZE / THREADS_PER_BLOCK + 1;
         }
 
-        static Func<int, int, int> cudaAdd = (a, b) =>
+        static Func<int[], int, int[]> fillVector = (m, value) =>
         {
-            // init output parameters
-            CudaDeviceVariable<int> result_dev = 0;
-            int result_host = 0;
-            // run CUDA method
-            addWithCuda.Run(a, b, result_dev.DevicePointer);
+            // init parameters
+            CudaDeviceVariable<int> vector_host = m;
+            // run cuda method
+            fillVectorWithCuda.Run(vector_host.DevicePointer, value);
             // copy return to host
-            result_dev.CopyToHost(ref result_host);
-            return result_host;
+            int[] output = new int[m.Length];
+            vector_host.CopyToHost(output);
+            return output;
         };
 
         static void Main(string[] args)
         {
             InitKernels();
-            Console.WriteLine(cudaAdd(3, 10));
+            int[] vector = Enumerable.Range(1, VECTOR_SIZE).ToArray();
+            vector = fillVector(vector, 13);
+            foreach (int s in vector) { Console.WriteLine(s); }
             Console.ReadKey();
         }
     }

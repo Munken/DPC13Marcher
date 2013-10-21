@@ -3,9 +3,9 @@
  
 extern "C"  
 {
-	__global__ void kernel(int a, int b, int *c)
+	__global__ void kernel(int *m, int v)
 	{
-		*c = (a + b)*(a + b);
+     m[threadIdx.x + (blockDim.x * blockIdx.x)] = v;
 	}
 }
  

@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestManaged", "TestManaged\TestManaged.vcxproj", "{9101F3DE-9BDD-4F61-A5F0-803F066D2FA1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ManagedTest", "ManagedTest\ManagedTest.csproj", "{DD2F6A69-86E3-4981-AA11-D438991776E5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9101F3DE-9BDD-4F61-A5F0-803F066D2FA1} = {9101F3DE-9BDD-4F61-A5F0-803F066D2FA1}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
