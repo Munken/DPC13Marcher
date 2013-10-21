@@ -119,7 +119,7 @@ __global__
 int main() {
 	allocateTables();
 
-	uint3 dims = make_uint3(100, 200, 200);
+	uint3 dims = make_uint3(20, 20, 20);
 	float3 min = make_float3(1, 1, 1)*-3;
 	float3 dx = make_float3(0.2f, 0.2f, 0.2f);
 
@@ -145,11 +145,11 @@ int main() {
 		if (!h) continue;
 
 		cout << h << endl;
-		for (uint j = 0; j < h; j++) {
+		/*for (uint j = 0; j < h; j++) {
 			float3 f = h_pos[i*MAX_TRIANGLES + j];
 			cout << f.x << "    " << f.y << "     " << f.z << "     " << f.x*f.x + f.y*f.y + f.z*f.z << endl;
 		}
-		cout << endl;
+		cout << endl;*/
 	}
 	return 1;
 }
