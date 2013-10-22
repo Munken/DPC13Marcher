@@ -115,10 +115,11 @@ namespace _3DGUI
             return group;
         }
 
-        private Model3DGroup CreateTriangleModel(float3 p0, float3 p1, float3 p2)
+        private Point3D toPoint(ref float3 f)
         {
-            return CreateTriangleModel(p0, p1, p2);
+            return new Point3D(f.x, f.y, f.z);
         }
+
         private Vector3D CalculateNormal(Point3D p0, Point3D p1, Point3D p2)
         {
             Vector3D v0 = new Vector3D(
@@ -155,29 +156,35 @@ namespace _3DGUI
             
             launcher.march();
             stopwatch.Stop();
-            Console.WriteLine("Time elapsed: {0}",
-        stopwatch.Elapsed);
+            Debug.WriteLine("Time elapsed: {0}",
+        stopwatch.ElapsedMilliseconds);
 
             stopwatch.Restart();
             Model3DGroup topography = new Model3DGroup();
             int N = launcher.count.Count();
+            uint cubes = 0, triangles = 0;
+
             for (int i = 0; i < N; i++)
             {
                 uint c = launcher.count[i];
                 if (c == 0) continue;
 
+                cubes++;
+                triangles += c / 3;
                 int offset = 15 * i;
                 for (int j = 0; j < c; j+=3)
                 {
                     float3 f0 = launcher.triangles[offset + j];
                     float3 f1 = launcher.triangles[offset + j + 1];
                     float3 f2 = launcher.triangles[offset + j + 2];
-                    topography.Children.Add(CreateTriangleModel(f0, f1, f2));
+                    topography.Children.Add(CreateTriangleModel(toPoint(ref f0), toPoint(ref f1), toPoint(ref f2)));
                 }
             }
             stopwatch.Stop();
-            Console.WriteLine("Time elapsed: {0}",
-        stopwatch.Elapsed);
+            Debug.WriteLine("Time elapsed: {0}",
+        stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Cubes: {0}, Triangles: {1}", cubes, triangles);
+
             //Point3D[] points = GetRandomTopographyPoints();
             //for (int z = 0; z <= 80; z = z + 10)
             //{
