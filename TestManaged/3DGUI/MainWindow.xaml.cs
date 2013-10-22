@@ -113,6 +113,11 @@ namespace _3DGUI
             group.Children.Add(model);
             return group;
         }
+
+        private Model3DGroup CreateTriangleModel(float3 p0, float3 p1, float3 p2)
+        {
+            return CreateTriangleModel(p0, p1, p2);
+        }
         private Vector3D CalculateNormal(Point3D p0, Point3D p1, Point3D p2)
         {
             Vector3D v0 = new Vector3D(
@@ -146,15 +151,23 @@ namespace _3DGUI
             
             launcher.march();
 
-            uint count = 0, triCount = 0;
-            foreach (uint c in launcher.count)
+
+            Model3DGroup topography = new Model3DGroup();
+            int N = launcher.count.Count();
+            for (int i = 0; i < N; i++)
             {
+                uint c = launcher.count[i];
                 if (c == 0) continue;
 
-                count++;
-                triCount += c;
+                int offset = 15 * i;
+                for (int j = 0; j < c; j+=3)
+                {
+                    float3 f0 = launcher.triangles[offset + j];
+                    float3 f1 = launcher.triangles[offset + j + 1];
+                    float3 f2 = launcher.triangles[offset + j + 2];
+                    topography.Children.Add(CreateTriangleModel(f0, f1, f2));
+                }
             }
-            //Model3DGroup topography = new Model3DGroup();
             //Point3D[] points = GetRandomTopographyPoints();
             //for (int z = 0; z <= 80; z = z + 10)
             //{
@@ -174,9 +187,9 @@ namespace _3DGUI
             //        );
             //    }
             //}
-            //ModelVisual3D model = new ModelVisual3D();
-            //model.Content = topography;
-            //this.mainViewport.Children.Add(model);
+            ModelVisual3D model = new ModelVisual3D();
+            model.Content = topography;
+            this.mainViewport.Children.Add(model);
 
             
         }
