@@ -160,30 +160,9 @@ namespace _3DGUI
         stopwatch.ElapsedMilliseconds);
 
             stopwatch.Restart();
-            Model3DGroup topography = new Model3DGroup();
-            int N = launcher.count.Count();
-            uint cubes = 0, triangles = 0;
-
-            for (int i = 0; i < N; i++)
-            {
-                uint c = launcher.count[i];
-                if (c == 0) continue;
-
-                cubes++;
-                triangles += c / 3;
-                int offset = 15 * i;
-                for (int j = 0; j < c; j+=3)
-                {
-                    float3 f0 = launcher.triangles[offset + j];
-                    float3 f1 = launcher.triangles[offset + j + 1];
-                    float3 f2 = launcher.triangles[offset + j + 2];
-                    topography.Children.Add(CreateTriangleModel(toPoint(ref f0), toPoint(ref f1), toPoint(ref f2)));
-                }
-            }
+            MeshGeometry3D mesh = createMesh(launcher);
             stopwatch.Stop();
-            Debug.WriteLine("Time elapsed: {0}",
-        stopwatch.ElapsedMilliseconds);
-            Console.WriteLine("Cubes: {0}, Triangles: {1}", cubes, triangles);
+            Debug.WriteLine("Time elapsed: {0}", stopwatch.ElapsedMilliseconds);
 
             //Point3D[] points = GetRandomTopographyPoints();
             //for (int z = 0; z <= 80; z = z + 10)
@@ -203,12 +182,58 @@ namespace _3DGUI
             //                    points[x + z + 11])
             //        );
             //    }
-            //}
-            ModelVisual3D model = new ModelVisual3D();
-            model.Content = topography;
-            this.mainViewport.Children.Add(model);
+            //} 
+
+            Material material = new DiffuseMaterial(
+                new SolidColorBrush(Colors.DarkKhaki));
+            GeometryModel3D model = new GeometryModel3D(
+                mesh, material);
+            Model3DGroup group = new Model3DGroup();
+            group.Children.Add(model);
+            ModelVisual3D visual = new ModelVisual3D();
+            visual.Content = group;
+            this.mainViewport.Children.Add(visual);
 
             
+        }
+
+        private MeshGeometry3D createMesh(MarcherLauncher launcher)
+        {
+            MeshGeometry3D mesh = new MeshGeometry3D();
+            int N = launcher.count.Count();
+            uint cubes = 0, triangles = 0;
+
+            for (int i = 0; i < N; i++)
+            {
+                uint c = launcher.count[i];
+                if (c == 0) continue;
+
+                cubes++;
+                triangles += c / 3;
+                int offset = 15 * i;
+                for (int j = 0; j < c; j += 3)
+                {
+                    float3 f0 = launcher.triangles[offset + j];
+                    float3 f1 = launcher.triangles[offset + j + 1];
+                    float3 f2 = launcher.triangles[offset + j + 2];
+                    addToMesh(mesh, toPoint(ref f0), toPoint(ref f1), toPoint(ref f2));
+                }
+            }
+            return mesh;
+        }
+
+        private void addToMesh(MeshGeometry3D mesh, Point3D p0, Point3D p1, Point3D p2)
+        {
+            mesh.Positions.Add(p0);
+            mesh.Positions.Add(p1);
+            mesh.Positions.Add(p2);
+            mesh.TriangleIndices.Add(0);
+            mesh.TriangleIndices.Add(1);
+            mesh.TriangleIndices.Add(2);
+            Vector3D normal = CalculateNormal(p0, p1, p2);
+            mesh.Normals.Add(normal);
+            mesh.Normals.Add(normal);
+            mesh.Normals.Add(normal);
         }
 
         private Point3D[] GetRandomTopographyPoints()
