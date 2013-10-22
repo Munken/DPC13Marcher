@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Media.Media3D;
+using Launcher;
 
 namespace _3DGUI
 {
@@ -133,29 +134,33 @@ namespace _3DGUI
         private void topography_Click(object sender, RoutedEventArgs e)
         {
             ClearViewport();
-            Model3DGroup topography = new Model3DGroup();
-            Point3D[] points = GetRandomTopographyPoints();
-            for (int z = 0; z <= 80; z = z + 10)
-            {
-                for (int x = 0; x < 9; x++)
-                {
-                    topography.Children.Add(
-                        CreateTriangleModel(
-                                points[x + z],
-                                points[x + z + 10],
-                                points[x + z + 1])
-                    );
-                    topography.Children.Add(
-                        CreateTriangleModel(
-                                points[x + z + 1],
-                                points[x + z + 10],
-                                points[x + z + 11])
-                    );
-                }
-            }
-            ModelVisual3D model = new ModelVisual3D();
-            model.Content = topography;
-            this.mainViewport.Children.Add(model);
+
+            var launcher = new MarcherLauncher();
+            //Model3DGroup topography = new Model3DGroup();
+            //Point3D[] points = GetRandomTopographyPoints();
+            //for (int z = 0; z <= 80; z = z + 10)
+            //{
+            //    for (int x = 0; x < 9; x++)
+            //    {
+            //        topography.Children.Add(
+            //            CreateTriangleModel(
+            //                    points[x + z],
+            //                    points[x + z + 10],
+            //                    points[x + z + 1])
+            //        );
+            //        topography.Children.Add(
+            //            CreateTriangleModel(
+            //                    points[x + z + 1],
+            //                    points[x + z + 10],
+            //                    points[x + z + 11])
+            //        );
+            //    }
+            //}
+            //ModelVisual3D model = new ModelVisual3D();
+            //model.Content = topography;
+            //this.mainViewport.Children.Add(model);
+
+            
         }
 
         private Point3D[] GetRandomTopographyPoints()

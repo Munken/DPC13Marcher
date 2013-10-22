@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MarcherLauncher
+namespace Launcher
 {
     using ManagedCuda;
     using ManagedCuda.VectorTypes;
-    class MarcherLauncher
+    public class MarcherLauncher
     {
 #region static
         const string moduleName = @"..\..\..\Marcher\Debug\march3.ptx";
@@ -36,6 +36,7 @@ namespace MarcherLauncher
         public uint[] count { get; set; }
 #endregion
 
+        public MarcherLauncher() { }
 
         public void march()
         {
