@@ -218,26 +218,6 @@ namespace _3DGUI
             mesh.Normals.Add(normal);
         }
 
-        private Point3D[] GetRandomTopographyPoints()
-        {
-            //create a 10x10 topography.
-            Point3D[] points = new Point3D[100];
-            Random r = new Random();
-            double y;
-            double denom = 1000;
-            int count = 0;
-            for (int z = 0; z < 10; z++)
-            {
-                for (int x = 0; x < 10; x++)
-                {
-                    y = Convert.ToDouble(r.Next(1, 999)) / denom;
-                    points[count] = new Point3D(x, y, z);
-                    count += 1;
-                }
-            }
-            return points;
-        }
-
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             ClearViewport();
