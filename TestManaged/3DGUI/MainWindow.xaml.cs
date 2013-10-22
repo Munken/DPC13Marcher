@@ -173,8 +173,6 @@ namespace _3DGUI
             ModelVisual3D visual = new ModelVisual3D();
             visual.Content = group;
             this.mainViewport.Children.Add(visual);
-
-            
         }
 
         private MeshGeometry3D createMesh(MarcherLauncher launcher)
