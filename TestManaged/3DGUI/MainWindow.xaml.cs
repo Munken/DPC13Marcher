@@ -37,18 +37,7 @@ namespace _3DGUI
             Point3D point1 = new Point3D(5, 0, 0);
             Point3D point2 = new Point3D(0, 0, 5);
 
-            triangleMesh.Positions.Add(point0);
-            triangleMesh.Positions.Add(point1);
-            triangleMesh.Positions.Add(point2);
-
-            triangleMesh.TriangleIndices.Add(0);
-            triangleMesh.TriangleIndices.Add(2);
-            triangleMesh.TriangleIndices.Add(1);
-
-            Vector3D normal = new Vector3D(0, 1, 0);
-            triangleMesh.Normals.Add(normal);
-            triangleMesh.Normals.Add(normal);
-            triangleMesh.Normals.Add(normal);
+            addToMesh(triangleMesh, point0, point1, point2);
 
             Material material = new DiffuseMaterial(new SolidColorBrush(Colors.DarkKhaki));
             GeometryModel3D triangleModel = new GeometryModel3D(triangleMesh, material);
