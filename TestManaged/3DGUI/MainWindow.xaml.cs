@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Media.Media3D;
+using System.Diagnostics;
 using Launcher;
 using ManagedCuda.VectorTypes;
 using ManagedCuda.BasicTypes;
@@ -141,6 +142,9 @@ namespace _3DGUI
         private void topography_Click(object sender, RoutedEventArgs e)
         {
             ClearViewport();
+            Stopwatch stopwatch = new Stopwatch();
+
+            stopwatch.Start();
 
             var launcher = new MarcherLauncher();
             uint n = 100;
@@ -150,8 +154,11 @@ namespace _3DGUI
             launcher.stepSize = new float3(1, 1, 1) * 0.05f;
             
             launcher.march();
+            stopwatch.Stop();
+            Console.WriteLine("Time elapsed: {0}",
+        stopwatch.Elapsed);
 
-
+            stopwatch.Restart();
             Model3DGroup topography = new Model3DGroup();
             int N = launcher.count.Count();
             for (int i = 0; i < N; i++)
@@ -168,6 +175,9 @@ namespace _3DGUI
                     topography.Children.Add(CreateTriangleModel(f0, f1, f2));
                 }
             }
+            stopwatch.Stop();
+            Console.WriteLine("Time elapsed: {0}",
+        stopwatch.Elapsed);
             //Point3D[] points = GetRandomTopographyPoints();
             //for (int z = 0; z <= 80; z = z + 10)
             //{
