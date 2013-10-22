@@ -21,6 +21,7 @@ namespace MarcherLauncher
         {
             var cumodule = context.LoadModule(moduleName);
             kernel = new CudaKernel(kernelName, cumodule, context);
+
             kernel.SetConstantVariable("d_edgeTable", Tables.EDGE_TABLE);
             kernel.SetConstantVariable("d_triTable", Tables.TRI_TABLE);
         }
@@ -55,20 +56,28 @@ namespace MarcherLauncher
         static void Main(string[] args)
         {
             MarcherLauncher launcher = new MarcherLauncher();
-            launcher.dimensions = new dim3(20, 20, 20);
+            uint n = 100;
+            launcher.dimensions = new dim3(1, 1, 1)*n;
             launcher.isoValue = 0;
             launcher.minValue = new float3(-1.5f, -1.5f, -1.5f);
-            launcher.stepSize = new float3(0.2f, 0.2f, 0.2f);
+            launcher.stepSize = new float3(1, 1, 1)*0.05f;
 
+            uint N = prod(launcher.dimensions);
+            kernel.BlockDimensions = new dim3(n);
+            kernel.GridDimensions = new dim3(N / n);
 
+            launcher.march();
 
-            launcher.march();            
-            
-            foreach (uint c in launcher.count)
-            {
-                if (c != 0)
-                    Console.WriteLine("{0}", c);
+            uint count = 0, triCount = 0;
+            foreach (uint c in launcher.count) {
+                if (c == 0) continue;
+
+                count++;
+                triCount += c;
             }
+
+            Console.WriteLine("Cubes: {0}, Vertex: {1}", count, triCount);
+            Console.ReadKey();
         }
 
         static uint prod(dim3 d)
