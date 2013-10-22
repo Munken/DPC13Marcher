@@ -27,9 +27,12 @@ namespace Launcher
         }
 #endregion
 #region config
+
+        dim3 dim;
         public dim3 dimensions { 
-            get; 
+            get {return dim;} 
             set {
+                dim = value;
                 kernel.BlockDimensions = value.x;
                 kernel.GridDimensions = value.y * value.z;
             } 
