@@ -69,24 +69,32 @@ namespace _3DGUI
             Point3D p5 = new Point3D(5, 5, 0);
             Point3D p6 = new Point3D(5, 5, 5);
             Point3D p7 = new Point3D(0, 5, 5);
+
+            MeshGeometry3D mesh = new MeshGeometry3D();
             //front side triangles
-            cube.Children.Add(CreateTriangleModel(p3, p2, p6));
-            cube.Children.Add(CreateTriangleModel(p3, p6, p7));
+            addToMesh(mesh,p3, p2, p6);
+            addToMesh(mesh,p3, p6, p7);
             //right side triangles
-            cube.Children.Add(CreateTriangleModel(p2, p1, p5));
-            cube.Children.Add(CreateTriangleModel(p2, p5, p6));
+            addToMesh(mesh,p2, p1, p5);
+            addToMesh(mesh,p2, p5, p6);
             //back side triangles
-            cube.Children.Add(CreateTriangleModel(p1, p0, p4));
-            cube.Children.Add(CreateTriangleModel(p1, p4, p5));
+            addToMesh(mesh,p1, p0, p4);
+            addToMesh(mesh,p1, p4, p5);
             //left side triangles
-            cube.Children.Add(CreateTriangleModel(p0, p3, p7));
-            cube.Children.Add(CreateTriangleModel(p0, p7, p4));
+            addToMesh(mesh,p0, p3, p7);
+            addToMesh(mesh,p0, p7, p4);
             //top side triangles
-            cube.Children.Add(CreateTriangleModel(p7, p6, p5));
-            cube.Children.Add(CreateTriangleModel(p7, p5, p4));
+            addToMesh(mesh,p7, p6, p5);
+            addToMesh(mesh,p7, p5, p4);
             //bottom side triangles
-            cube.Children.Add(CreateTriangleModel(p2, p3, p0));
-            cube.Children.Add(CreateTriangleModel(p2, p0, p1));
+            addToMesh(mesh,p2, p3, p0);
+            addToMesh(mesh,p2, p0, p1);
+
+            Material material = new DiffuseMaterial(
+                new SolidColorBrush(Colors.DarkKhaki));
+            GeometryModel3D geometry = new GeometryModel3D(
+                mesh, material);
+            cube.Children.Add(geometry);
 
             ModelVisual3D model = new ModelVisual3D();
             model.Content = cube;
