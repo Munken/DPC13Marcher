@@ -55,7 +55,7 @@ namespace MarcherLauncher
         static void Main(string[] args)
         {
             MarcherLauncher launcher = new MarcherLauncher();
-            launcher.dimensions = new dim3(20, 20, 20);
+            launcher.dimensions = new dim3(100, 100, 100);
             launcher.isoValue = 0;
             launcher.minValue = new float3(-1.5f, -1.5f, -1.5f);
             launcher.stepSize = new float3(0.2f, 0.2f, 0.2f);
