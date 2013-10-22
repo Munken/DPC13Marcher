@@ -27,7 +27,13 @@ namespace Launcher
         }
 #endregion
 #region config
-        public dim3 dimensions { get; set; }
+        public dim3 dimensions { 
+            get; 
+            set {
+                kernel.BlockDimensions = value.x;
+                kernel.GridDimensions = value.y * value.z;
+            } 
+        }
         public float isoValue { get; set; }
         public float3 minValue { get; set; }
         public float3 stepSize { get; set; }
@@ -81,7 +87,7 @@ namespace Launcher
             Console.ReadKey();
         }
 
-        static uint prod(dim3 d)
+        public static uint prod(dim3 d)
         {
             return d.x * d.y * d.z;
         }

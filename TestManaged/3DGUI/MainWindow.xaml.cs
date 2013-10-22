@@ -14,6 +14,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Media.Media3D;
 using Launcher;
+using ManagedCuda.VectorTypes;
+using ManagedCuda.BasicTypes;
 
 namespace _3DGUI
 {
@@ -136,6 +138,22 @@ namespace _3DGUI
             ClearViewport();
 
             var launcher = new MarcherLauncher();
+            uint n = 100;
+            launcher.dimensions = new dim3(1, 1, 1) * n;
+            launcher.isoValue = 0;
+            launcher.minValue = new float3(-1.5f, -1.5f, -1.5f);
+            launcher.stepSize = new float3(1, 1, 1) * 0.05f;
+            
+            launcher.march();
+
+            uint count = 0, triCount = 0;
+            foreach (uint c in launcher.count)
+            {
+                if (c == 0) continue;
+
+                count++;
+                triCount += c;
+            }
             //Model3DGroup topography = new Model3DGroup();
             //Point3D[] points = GetRandomTopographyPoints();
             //for (int z = 0; z <= 80; z = z + 10)
