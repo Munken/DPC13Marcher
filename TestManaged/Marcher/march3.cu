@@ -79,7 +79,9 @@ extern "C" {
 			cubeindex += uint(value[6] < isoValue)*64; 
 			cubeindex += uint(value[7] < isoValue)*128;
 
-			count[idx] = d_countTable[cubeindex];
+			uint nVertices = d_countTable[cubeindex];
+			count[idx] = nVertices;
+			isOccupied[idx] = nVertices > 0;
 	}
 
 	__global__
@@ -159,6 +161,18 @@ extern "C" {
 			count[idx] = i;
 	}
 
+	void exclusiveScan(uint* in, uint* out, uint N) {
+		thrust::exclusive_scan(thrust::device_ptr<unsigned int>(in),
+			thrust::device_ptr<unsigned int>(in + N),
+			thrust::device_ptr<unsigned int>(out));
+	}
+
+	uint retrieve(uint* array, uint element) {
+		uint result;
+		cudaMemcpy(&result, (array + element), sizeof(uint), cudaMemcpyDeviceToHost);
+		return result;
+	}
+
 
 	int main() {
 		using namespace Gadgetron;
@@ -175,13 +189,13 @@ extern "C" {
 
 		const uint N = prod(dims);
 		uint* d_count;
-		uint* d_occupied;
+		uint *d_occupied, *d_occupiedCompact, *d_occupiedScan;
 		float3* d_pos;
 
 		t = new GPUTimer("Malloc");
 		cudaMalloc((void **) &d_count, (N+1)*sizeof(uint));
 		cudaMalloc((void **) &d_occupied, (N+1)*sizeof(uint));
-		//cudaMalloc((void **) &d_pos, N*MAX_TRIANGLES*sizeof(float3));
+		cudaMalloc((void **) &d_occupiedScan, (N+1)*sizeof(uint));
 		delete t;
 
 		t = new GPUTimer("Running kernel");
@@ -190,22 +204,19 @@ extern "C" {
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
 
-		/*t = new GPUTimer("Transfer last");
-		uint nVertex = 0;
-		cudaMemcpy(&nVertex, (d_count + N - 1), sizeof(uint), cudaMemcpyDeviceToHost);
+		
+		t = new GPUTimer("Scan occupied");
+		exclusiveScan(d_occupied, d_occupiedScan, N+1);
 		delete t;
-		CHECK_FOR_CUDA_ERROR();*/
-
 
 		t = new GPUTimer("Scan count");
-		thrust::exclusive_scan(thrust::device_ptr<unsigned int>(d_count),
-			thrust::device_ptr<unsigned int>(d_count + N + 1),
-			thrust::device_ptr<unsigned int>(d_count));
+		exclusiveScan(d_occupied, d_occupiedScan, N+1);
+		uint nVoxel = retrieve(d_occupiedScan, N);
+		cout << nVoxel << endl;
 		delete t;
 
 		t = new GPUTimer("Transfer last scan element");
-		uint nVertex;
-		cudaMemcpy(&nVertex, (d_count + N - 1), sizeof(uint), cudaMemcpyDeviceToHost);
+		uint nVertex = retrieve(d_count, N);
 		cout << nVertex << endl;
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
