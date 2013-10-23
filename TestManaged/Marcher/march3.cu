@@ -181,7 +181,6 @@ extern "C" {
 		return result;
 	}
 
-
 	int main() {
 		using namespace Gadgetron;
 		GPUTimer* t;
@@ -237,6 +236,11 @@ extern "C" {
 		t = new GPUTimer("Transfer last scan element");
 		uint nVertex = retrieve(d_count, N);
 		cout << nVertex << endl;
+		delete t;
+		CHECK_FOR_CUDA_ERROR();
+
+		t = new GPUTimer("Alloc vertex array");
+		gpuAlloc(d_pos, nVertex);
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
 

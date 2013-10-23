@@ -4,10 +4,6 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  *  Should never be used in the code, use CHECK_FOR_CUDA_ERROR(); instead
  */
@@ -31,4 +27,9 @@ void CHECK_FOR_CUDA_ERROR_FUNCTION(const char* file, const char* line);
 /* #define CHECK_FOR_CUDA_ERROR() */
 /* #endif */
 
-#endif /* _CUDA_UTILITIES_ */
+template<typename T>
+void gpuAlloc(T* ptr, uint N) {
+	cudaMalloc((void **) &ptr, N*sizeof(T));
+}
+
+#endif
