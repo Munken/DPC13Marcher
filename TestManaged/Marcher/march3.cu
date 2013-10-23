@@ -76,13 +76,13 @@ extern "C" {
 
 			uint cubeindex;
 			cubeindex =  uint(func(corners[0]) < isoValue); 
-			cubeindex += uint(func(corners[1]) < isoValue)*2; 
-			cubeindex += uint(func(corners[2]) < isoValue)*4; 
-			cubeindex += uint(func(corners[3]) < isoValue)*8; 
-			cubeindex += uint(func(corners[4]) < isoValue)*16; 
-			cubeindex += uint(func(corners[5]) < isoValue)*32; 
-			cubeindex += uint(func(corners[6]) < isoValue)*64; 
-			cubeindex += uint(func(corners[7]) < isoValue)*128;
+			     + uint(func(corners[1]) < isoValue)*2; 
+			     + uint(func(corners[2]) < isoValue)*4; 
+			     + uint(func(corners[3]) < isoValue)*8; 
+			     + uint(func(corners[4]) < isoValue)*16; 
+			     + uint(func(corners[5]) < isoValue)*32; 
+			     + uint(func(corners[6]) < isoValue)*64; 
+			     + uint(func(corners[7]) < isoValue)*128;
 
 			uint nVertices = d_countTable[cubeindex];
 			count[idx] = nVertices;
