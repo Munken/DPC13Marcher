@@ -47,7 +47,7 @@ extern "C" {
 	}
 
 	__global__ 
-		void countKernel(float isoValue, dim3 dims, float3 minX, float3 dx, uint* count) {
+		void countKernel(float isoValue, dim3 dims, float3 minX, float3 dx, uint* count, uint* isOccupied) {
 			uint idx = blockIdx.x*blockDim.x + threadIdx.x;
 
 			uint3 co = idx_to_co(idx, dims);
@@ -168,43 +168,46 @@ extern "C" {
 		allocateTables();
 		delete t;
 
-		int n = 5;
+		int n = 70;
 		uint3 dims = make_uint3(1, 1, 1) * n;
 		float3 min = make_float3(1, 1, 1)*-1.2f;
 		float3 dx = make_float3(0.2f, 0.2f, 0.2f);
 
 		const uint N = prod(dims);
 		uint* d_count;
+		uint* d_occupied;
 		float3* d_pos;
 
 		t = new GPUTimer("Malloc");
-		cudaMalloc((void **) &d_count, N*sizeof(uint));
+		cudaMalloc((void **) &d_count, (N+1)*sizeof(uint));
+		cudaMalloc((void **) &d_occupied, (N+1)*sizeof(uint));
 		//cudaMalloc((void **) &d_pos, N*MAX_TRIANGLES*sizeof(float3));
 		delete t;
 
 		t = new GPUTimer("Running kernel");
 		//simpleKernel <<< N/n, n >>> (0, dims, min, dx, d_pos, d_count);
-		countKernel <<< N/n, n >>> (0, dims, min, dx, d_count);
+		countKernel <<< N/n, n >>> (0, dims, min, dx, d_count, d_occupied);
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
 
-		t = new GPUTimer("Transfer last");
+		/*t = new GPUTimer("Transfer last");
 		uint nVertex = 0;
 		cudaMemcpy(&nVertex, (d_count + N - 1), sizeof(uint), cudaMemcpyDeviceToHost);
 		delete t;
-		CHECK_FOR_CUDA_ERROR();
+		CHECK_FOR_CUDA_ERROR();*/
 
 
-		t = new GPUTimer("Scan");
+		t = new GPUTimer("Scan count");
 		thrust::exclusive_scan(thrust::device_ptr<unsigned int>(d_count),
-			thrust::device_ptr<unsigned int>(d_count + N),
+			thrust::device_ptr<unsigned int>(d_count + N + 1),
 			thrust::device_ptr<unsigned int>(d_count));
 		delete t;
 
-		uint tmp;
-		cudaMemcpy(&tmp, (d_count + N - 1), sizeof(uint), cudaMemcpyDeviceToHost);
-		nVertex += tmp;
+		t = new GPUTimer("Transfer last scan element");
+		uint nVertex;
+		cudaMemcpy(&nVertex, (d_count + N - 1), sizeof(uint), cudaMemcpyDeviceToHost);
 		cout << nVertex << endl;
+		delete t;
 		CHECK_FOR_CUDA_ERROR();
 
 
