@@ -240,7 +240,7 @@ extern "C" {
 		CHECK_FOR_CUDA_ERROR();
 
 		t = new GPUTimer("Alloc vertex array");
-		gpuAlloc(d_pos, nVertex);
+		cudaMalloc((void **) &d_pos, nVertex*sizeof(float3));
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
 

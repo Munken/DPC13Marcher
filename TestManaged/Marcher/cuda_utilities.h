@@ -9,9 +9,7 @@
  */
 void CHECK_FOR_CUDA_ERROR_FUNCTION(const char* file, const char* line);
 
-#ifdef __cplusplus
-}
-#endif
+
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
@@ -28,7 +26,7 @@ void CHECK_FOR_CUDA_ERROR_FUNCTION(const char* file, const char* line);
 /* #endif */
 
 template<typename T>
-void gpuAlloc(T* ptr, uint N) {
+void gpuAlloc(T* ptr, unsigned int N) {
 	cudaMalloc((void **) &ptr, N*sizeof(T));
 }
 
