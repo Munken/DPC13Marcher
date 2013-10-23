@@ -7,6 +7,8 @@
 #include <thrust\scan.h>
 #include <thrust\device_ptr.h>
 
+#include <cub/cub.cuh>
+
 #include "util.hcu"
 #include "cutil_math.h"
 #include "tables.h"
@@ -168,9 +170,17 @@ extern "C" {
 	}
 
 	void exclusiveScan(uint* in, uint* out, uint N) {
-		thrust::exclusive_scan(thrust::device_ptr<unsigned int>(in),
-			thrust::device_ptr<unsigned int>(in + N),
-			thrust::device_ptr<unsigned int>(out));
+		//thrust::exclusive_scan(thrust::device_ptr<unsigned int>(in),
+		//	thrust::device_ptr<unsigned int>(in + N),
+		//	thrust::device_ptr<unsigned int>(out));
+
+		void *d_temp_storage = NULL;
+		size_t temp_storage_bytes = 0;
+		cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, in, out, N);
+
+		cudaMalloc(&d_temp_storage, temp_storage_bytes);
+		// Run reduction summation
+		cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, in, out, N);
 	}
 
 	uint retrieve(uint* array, uint element) {
