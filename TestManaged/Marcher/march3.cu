@@ -248,6 +248,11 @@ extern "C" {
 		CHECK_FOR_CUDA_ERROR();
 
 
+		float3* h_pos = new float3[N*MAX_TRIANGLES];
+		t = new GPUTimer("Memcpy");
+		cudaMemcpy(h_pos, d_pos, nVertex * sizeof(float3), cudaMemcpyDeviceToHost);
+		delete t;
+		CHECK_FOR_CUDA_ERROR();
 
 		return 0;
 		uint* h_count = new uint[N];
