@@ -187,10 +187,10 @@ extern "C" {
 		allocateTables();
 		delete t;
 
-		int n = 70;
+		int n = 190;
 		uint3 dims = make_uint3(1, 1, 1) * n;
 		float3 min = make_float3(1, 1, 1)*-1.2f;
-		float3 dx = make_float3(0.2f, 0.2f, 0.2f);
+		float3 dx = make_float3(1, 1, 1)*0.02f;
 
 		const uint N = prod(dims);
 		uint* d_count;
@@ -248,36 +248,13 @@ extern "C" {
 		CHECK_FOR_CUDA_ERROR();
 
 
-		float3* h_pos = new float3[N*MAX_TRIANGLES];
+		float3* h_pos = new float3[nVertex];
 		t = new GPUTimer("Memcpy");
 		cudaMemcpy(h_pos, d_pos, nVertex * sizeof(float3), cudaMemcpyDeviceToHost);
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
 
 		return 0;
-		uint* h_count = new uint[N];
-		float3* h_pos = new float3[N*MAX_TRIANGLES];
-
-		t = new GPUTimer("Memcpy");
-		cudaMemcpy(h_count, d_count, N * sizeof(uint), cudaMemcpyDeviceToHost);
-		cudaMemcpy(h_pos, d_pos, N * MAX_TRIANGLES * sizeof(float3), cudaMemcpyDeviceToHost);
-		delete t;
-		CHECK_FOR_CUDA_ERROR();
-
-		uint count = 0;
-		for (uint i = 0; i < N; i++) {
-			uint h = h_count[i];
-			if (!h) continue;
-			count+=h;
-
-			//cout << h << endl;
-			/*for (uint j = 0; j < h; j++) {
-			float3 f = h_pos[i*MAX_TRIANGLES + j];
-			cout << f.x << "    " << f.y << "     " << f.z << "     " << f.x*f.x + f.y*f.y + f.z*f.z << endl;
-			}
-			cout << endl;*/
-		}
-		cout << count << endl;
-		return 1;
+		
 	}
 }
