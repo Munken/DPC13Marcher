@@ -209,10 +209,13 @@ extern "C" {
 		exclusiveScan(d_occupied, d_occupiedScan, N+1);
 		delete t;
 
-		t = new GPUTimer("Scan count");
-		exclusiveScan(d_occupied, d_occupiedScan, N+1);
+		t = new GPUTimer("Transfer last occupied element");
 		uint nVoxel = retrieve(d_occupiedScan, N);
 		cout << nVoxel << endl;
+		delete t;
+
+		t = new GPUTimer("Scan count");
+		exclusiveScan(d_occupied, d_occupiedScan, N+1);
 		delete t;
 
 		t = new GPUTimer("Transfer last scan element");
