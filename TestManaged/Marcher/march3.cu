@@ -66,7 +66,7 @@ extern "C" {
 			corners[7] = corners[0] + make_float3(0,    dx.y, dx.z);
 
 			float value[8];
-
+#pragma unroll 8
 			for (int i = 0; i < 8; i++) {
 				value[i] = func(corners[i]);
 			}
@@ -115,6 +115,7 @@ extern "C" {
 
 			float value[8];
 
+#pragma unroll 8
 			for (int i = 0; i < 8; i++) {
 				value[i] = func(corners[i]);
 			}
@@ -133,33 +134,33 @@ extern "C" {
 
 			float3 vertList[12];
 
-			if (d_edgeTable[cubeindex] & 1)
+			//if (d_edgeTable[cubeindex] & 1)
 				interpValues(isoValue,value[0],value[1],corners[0],corners[1], vertList[0]);
-			if (d_edgeTable[cubeindex] & 2)
+			//if (d_edgeTable[cubeindex] & 2)
 				interpValues(isoValue,value[1],value[2],corners[1],corners[2], vertList[1]);
-			if (d_edgeTable[cubeindex] & 4)
+			//if (d_edgeTable[cubeindex] & 4)
 				interpValues(isoValue,value[2],value[3],corners[2],corners[3], vertList[2]);
-			if (d_edgeTable[cubeindex] & 8)
+			//if (d_edgeTable[cubeindex] & 8)
 				interpValues(isoValue,value[3],value[0],corners[3],corners[0], vertList[3]);
-			if (d_edgeTable[cubeindex] & 16)
+			//if (d_edgeTable[cubeindex] & 16)
 				interpValues(isoValue,value[4],value[5],corners[4],corners[5], vertList[4]);
-			if (d_edgeTable[cubeindex] & 32)
+			//if (d_edgeTable[cubeindex] & 32)
 				interpValues(isoValue,value[5],value[6],corners[5],corners[6], vertList[5]);
-			if (d_edgeTable[cubeindex] & 64)
+			//if (d_edgeTable[cubeindex] & 64)
 				interpValues(isoValue,value[6],value[7],corners[6],corners[7], vertList[6]);
-			if (d_edgeTable[cubeindex] & 128)
+			//if (d_edgeTable[cubeindex] & 128)
 				interpValues(isoValue,value[7],value[4],corners[7],corners[4], vertList[7]);
-			if (d_edgeTable[cubeindex] & 256)
+			//if (d_edgeTable[cubeindex] & 256)
 				interpValues(isoValue,value[0],value[4],corners[0],corners[4], vertList[8]);
-			if (d_edgeTable[cubeindex] & 512)
+			//if (d_edgeTable[cubeindex] & 512)
 				interpValues(isoValue,value[1],value[5],corners[1],corners[5], vertList[9]);
-			if (d_edgeTable[cubeindex] & 1024)
+			//if (d_edgeTable[cubeindex] & 1024)
 				interpValues(isoValue,value[2],value[6],corners[2],corners[6], vertList[10]);
-			if (d_edgeTable[cubeindex] & 2048)
+			//if (d_edgeTable[cubeindex] & 2048)
 				interpValues(isoValue,value[3],value[7],corners[3],corners[7], vertList[11]);
 
 			
-			uint offset = vertexPrefix[idx];
+			const uint offset = vertexPrefix[idx];
 
 			for (uint i = 0; i < MAX_TRIANGLES; i++) {
 				uint edge = d_triTable[cubeindex][i];
@@ -170,17 +171,17 @@ extern "C" {
 	}
 
 	void exclusiveScan(uint* in, uint* out, uint N) {
-		//thrust::exclusive_scan(thrust::device_ptr<unsigned int>(in),
-		//	thrust::device_ptr<unsigned int>(in + N),
-		//	thrust::device_ptr<unsigned int>(out));
+		thrust::exclusive_scan(thrust::device_ptr<unsigned int>(in),
+			thrust::device_ptr<unsigned int>(in + N),
+			thrust::device_ptr<unsigned int>(out));
 
-		void *d_temp_storage = NULL;
-		size_t temp_storage_bytes = 0;
-		cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, in, out, N);
+		//void *d_temp_storage = NULL;
+		//size_t temp_storage_bytes = 0;
+		//cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, in, out, N);
 
-		cudaMalloc(&d_temp_storage, temp_storage_bytes);
-		// Run reduction summation
-		cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, in, out, N);
+		//cudaMalloc(&d_temp_storage, temp_storage_bytes);
+		//// Run reduction summation
+		//cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, in, out, N);
 	}
 
 	uint retrieve(uint* array, uint element) {
@@ -193,11 +194,11 @@ extern "C" {
 		using namespace Gadgetron;
 		GPUTimer* t;
 
-		t = new GPUTimer("Const alloc");
+		//t = new GPUTimer("Const alloc");
 		allocateTables();
-		delete t;
+		//delete t;
 
-		int n = 190;
+		int n = 100;
 		uint3 dims = make_uint3(1, 1, 1) * n;
 		float3 min = make_float3(1, 1, 1)*-1.2f;
 		float3 dx = make_float3(1, 1, 1)*0.02f;
@@ -215,56 +216,57 @@ extern "C" {
 
 		t = new GPUTimer("Running kernel");
 		//fillTriangles <<< N/n, n >>> (0, dims, min, dx, d_pos, d_count);
-		countKernel <<< N/n, n >>> (0, dims, min, dx, d_count, d_occupied);
+		countKernel <<< N/200, 200 >>> (0, dims, min, dx, d_count, d_occupied);
+		//cudaThreadSynchronize();
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
 
 		
-		t = new GPUTimer("Scan occupied");
+		//t = new GPUTimer("Scan occupied");
 		exclusiveScan(d_occupied, d_occupiedScan, N+1);
-		delete t;
+		//delete t;
 
-		t = new GPUTimer("Transfer last occupied element");
+		//t = new GPUTimer("Transfer last occupied element");
 		uint nVoxel = retrieve(d_occupiedScan, N);
-		cout << nVoxel << endl;
-		delete t;
+		//cout << nVoxel << endl;
+		//delete t;
 
-		t = new GPUTimer("Malloc compact");
+		//t = new GPUTimer("Malloc compact");
 		cudaMalloc((void **) &d_occupiedCompact, nVoxel*sizeof(uint));
-		delete t;
+		//delete t;
 
-		t = new GPUTimer("Compact");
+		//t = new GPUTimer("Compact");
 		compact <<< N/n, n >>> (d_occupied, d_occupiedScan, d_occupiedCompact);
-		delete t;
+		//delete t;
 
-		t = new GPUTimer("Scan count");
+		//t = new GPUTimer("Scan count");
 		exclusiveScan(d_count, d_count, N+1);
-		delete t;
+		//delete t;
 
-		t = new GPUTimer("Transfer last scan element");
+		//t = new GPUTimer("Transfer last scan element");
 		uint nVertex = retrieve(d_count, N);
-		cout << nVertex << endl;
-		delete t;
-		CHECK_FOR_CUDA_ERROR();
+		//cout << nVertex << endl;
+		//delete t;
+		//CHECK_FOR_CUDA_ERROR();
 
-		t = new GPUTimer("Alloc vertex array");
+		//t = new GPUTimer("Alloc vertex array");
 		cudaMalloc((void **) &d_pos, nVertex*sizeof(float3));
-		delete t;
-		CHECK_FOR_CUDA_ERROR();
+		//delete t;
+		//CHECK_FOR_CUDA_ERROR();
 
-		t = new GPUTimer("Gen triangles");
+		//t = new GPUTimer("Gen triangles");
 		int blockSize = 128;
 		int nBlocks = N/blockSize + (N%blockSize != 0);
 		fillTriangles <<< nBlocks, blockSize >>> (0, dims, min, dx, d_pos, d_count, nVoxel);
-		delete t;
-		CHECK_FOR_CUDA_ERROR();
+		//delete t;
+		//CHECK_FOR_CUDA_ERROR();
 
 
 		float3* h_pos = new float3[nVertex];
-		t = new GPUTimer("Memcpy");
+		//t = new GPUTimer("Memcpy");
 		cudaMemcpy(h_pos, d_pos, nVertex * sizeof(float3), cudaMemcpyDeviceToHost);
-		delete t;
-		CHECK_FOR_CUDA_ERROR();
+		//delete t;
+		//CHECK_FOR_CUDA_ERROR();
 
 		return 0;
 		
