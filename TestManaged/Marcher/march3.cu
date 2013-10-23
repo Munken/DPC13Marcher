@@ -85,6 +85,14 @@ extern "C" {
 	}
 
 	__global__
+		void compact(uint* isOccupied, uint* occupiedScan, uint* occupiedCompact) {
+			uint idx = blockIdx.x*blockDim.x + threadIdx.x;
+			if (isOccupied[idx]) {
+				occupiedCompact[occupiedScan[idx]] = idx;
+			}
+	}
+
+	__global__
 		void simpleKernel(float isoValue, dim3 dims, float3 minX, float3 dx, float3* out, uint* count) {
 			uint idx = blockIdx.x*blockDim.x + threadIdx.x;
 
@@ -212,6 +220,14 @@ extern "C" {
 		t = new GPUTimer("Transfer last occupied element");
 		uint nVoxel = retrieve(d_occupiedScan, N);
 		cout << nVoxel << endl;
+		delete t;
+
+		t = new GPUTimer("Malloc compact");
+		cudaMalloc((void **) &d_occupiedCompact, nVoxel*sizeof(uint));
+		delete t;
+
+		t = new GPUTimer("Compact");
+		compact <<< N/n, n >>> (d_occupied, d_occupiedScan, d_occupiedCompact);
 		delete t;
 
 		t = new GPUTimer("Scan count");
