@@ -7,7 +7,7 @@
 #include <thrust\scan.h>
 #include <thrust\device_ptr.h>
 
-#include <cub/cub.cuh>
+#include <cub/device/device_scan.cuh>
 
 #include "util.hcu"
 #include "cutil_math.h"
@@ -178,13 +178,16 @@ extern "C" {
 			thrust::device_ptr<unsigned int>(in + N),
 			thrust::device_ptr<unsigned int>(out));*/
 
+		using namespace cub;
 		void *d_temp_storage = NULL;
 		size_t temp_storage_bytes = 0;
-		cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, in, out, N);
-
+		DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, in, out, N);
+		// Allocate temporary storage for exclusive prefix sum
 		cudaMalloc(&d_temp_storage, temp_storage_bytes);
-		// Run reduction summation
-		cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, in, out, N);
+		// Run exclusive prefix sum
+		DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, in, out, N);
+
+		cudaFree(d_temp_storage);
 	}
 
 	uint retrieve(uint* array, uint element) {
@@ -201,7 +204,7 @@ extern "C" {
 		allocateTables();
 		delete t;
 
-		int n = 100;
+		int n = 190;
 		uint3 dims = make_uint3(1, 1, 1) * n;
 		float3 min = make_float3(1, 1, 1)*-1.2f;
 		float3 dx = make_float3(1, 1, 1)*0.02f;
