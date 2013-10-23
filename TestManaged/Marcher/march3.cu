@@ -157,11 +157,14 @@ extern "C" {
 
 
 	int main() {
-		allocateTables();
 		using namespace Gadgetron;
-
 		GPUTimer* t;
-		int n = 190;
+
+		t = new GPUTimer("Const alloc");
+		allocateTables();
+		delete t;
+
+		int n = 100;
 		uint3 dims = make_uint3(1, 1, 1) * n;
 		float3 min = make_float3(1, 1, 1)*-3;
 		float3 dx = make_float3(0.2f, 0.2f, 0.2f);
@@ -181,6 +184,7 @@ extern "C" {
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
 
+		return 0;
 		uint* h_count = new uint[N];
 		float3* h_pos = new float3[N*MAX_TRIANGLES];
 

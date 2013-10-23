@@ -19,7 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cuda_utilities.h" />
     <ClInclude Include="cutil_math.h" />
+    <ClInclude Include="error.h" />
     <ClInclude Include="tables.h" />
     <ClInclude Include="typedefs.h" />
   </ItemGroup>
@@ -28,6 +30,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="util.hcu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cuda_utilities.cpp" />
+    <ClCompile Include="error.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{2A2E439A-46EA-4A49-B2E1-245A9672B7CA}</ProjectGuid>
