@@ -6,6 +6,7 @@
 #include "util.hcu"
 #include "cutil_math.h"
 #include "tables.h"
+#include "GPUTimer.h"
 
 using namespace std;
 
@@ -118,7 +119,9 @@ __global__
 
 int main() {
 	allocateTables();
+	using namespace Gadgetron;
 
+	GPUTimer* t;
 	uint3 dims = make_uint3(20, 20, 20);
 	float3 min = make_float3(1, 1, 1)*-3;
 	float3 dx = make_float3(0.2f, 0.2f, 0.2f);
@@ -130,9 +133,9 @@ int main() {
 	cudaMalloc((void **) &d_count, N*sizeof(uint));
 	cudaMalloc((void **) &d_pos, N*MAX_TRIANGLES*sizeof(float3));
 
-
-	
+	t = new GPUTimer("Running kernel");
 	simpleKernel <<< N/200, 200 >>> (0, dims, min, dx, d_pos, d_count);
+	delete t;
 
 	uint* h_count = new uint[N];
 	float3* h_pos = new float3[N*MAX_TRIANGLES];
