@@ -25,9 +25,4 @@ void CHECK_FOR_CUDA_ERROR_FUNCTION(const char* file, const char* line);
 /* #define CHECK_FOR_CUDA_ERROR() */
 /* #endif */
 
-template<typename T>
-void gpuAlloc(T* ptr, unsigned int N) {
-	cudaMalloc((void **) &ptr, N*sizeof(T));
-}
-
 #endif
