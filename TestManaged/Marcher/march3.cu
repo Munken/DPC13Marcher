@@ -7,6 +7,7 @@
 #include "cutil_math.h"
 #include "tables.h"
 #include "GPUTimer.h"
+#include "cuda_utilities.h"
 
 using namespace std;
 
@@ -114,32 +115,6 @@ __global__
 		}
 
 		count[idx] = i;
-}
-
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-#define CHECK_FOR_CUDA_ERROR() CHECK_FOR_CUDA_ERROR_FUNCTION(__FILE__,TOSTRING(__LINE__))
-
-void exit_with_error(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    fprintf(stderr, "error: ");
-    vfprintf(stderr, fmt, args);
-    va_end(args);
-    exit(EXIT_FAILURE);
-}
-
-void CHECK_FOR_CUDA_ERROR_FUNCTION(const char* file, const char* line) {
-	cudaError_t errorCode = cudaGetLastError();
-	if (errorCode != cudaSuccess) {
-		exit_with_error("[file:%s line:%s] CUDA Error: %s", 
-                        file, line, cudaGetErrorString(errorCode) );
-	}
-    errorCode = cudaThreadSynchronize();
-    if (errorCode != cudaSuccess) {
-		exit_with_error("[file:%s line:%s] CUDA sync Error: %s", 
-                        file, line, cudaGetErrorString(errorCode) );
-    }
 }
 
 
