@@ -253,7 +253,9 @@ extern "C" {
 		CHECK_FOR_CUDA_ERROR();
 
 		t = new GPUTimer("Gen triangles");
-		fillTriangles <<< nVoxel / 32, 32 >>> (0, dims, min, dx, d_pos, d_count, nVoxel);
+		int blockSize = 128;
+		int nBlocks = N/blockSize + (N%blockSize != 0);
+		fillTriangles <<< nBlocks, blockSize >>> (0, dims, min, dx, d_pos, d_count, nVoxel);
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
 
