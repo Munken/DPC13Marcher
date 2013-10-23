@@ -3,6 +3,10 @@
 #include "cuda_runtime.h"
 #include "typedefs.h"
 #include "device_launch_parameters.h"
+
+#include <thrust\scan.h>
+#include <thrust\device_ptr.h>
+
 #include "util.hcu"
 #include "cutil_math.h"
 #include "tables.h"
@@ -27,17 +31,17 @@ extern "C" {
 	}
 
 	__device__ 
-		float3 cornerValue(const uint3 co, const float3 minX, const float3 dx) {
+		inline float3 cornerValue(const uint3 co, const float3 minX, const float3 dx) {
 			return make_float3(minX.x + co.x*dx.x, minX.y + co.y*dx.y, minX.z + co.z*dx.z); 
 	}
 
 	__device__ 
-		float func(float3 co) {
+		inline float func(float3 co) {
 			return co.x*co.x + co.y*co.y + co.z*co.z - 1;
 	}
 
 	__device__ 
-		void interpValues(float isoValue, const float v0, const float v1, float3 p0, float3 p1, float3& out) {
+		inline void interpValues(float isoValue, const float v0, const float v1, float3 p0, float3 p1, float3& out) {
 			float mu = (isoValue - v0) / (v1 - v0);
 			out = lerp(p0, p1, mu);
 	}
@@ -164,9 +168,9 @@ extern "C" {
 		allocateTables();
 		delete t;
 
-		int n = 100;
+		int n = 5;
 		uint3 dims = make_uint3(1, 1, 1) * n;
-		float3 min = make_float3(1, 1, 1)*-3;
+		float3 min = make_float3(1, 1, 1)*-1.2f;
 		float3 dx = make_float3(0.2f, 0.2f, 0.2f);
 
 		const uint N = prod(dims);
@@ -175,7 +179,7 @@ extern "C" {
 
 		t = new GPUTimer("Malloc");
 		cudaMalloc((void **) &d_count, N*sizeof(uint));
-		cudaMalloc((void **) &d_pos, N*MAX_TRIANGLES*sizeof(float3));
+		//cudaMalloc((void **) &d_pos, N*MAX_TRIANGLES*sizeof(float3));
 		delete t;
 
 		t = new GPUTimer("Running kernel");
@@ -183,6 +187,14 @@ extern "C" {
 		countKernel <<< N/n, n >>> (0, dims, min, dx, d_count);
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
+
+
+		t = new GPUTimer("Scan");
+		thrust::exclusive_scan(thrust::device_ptr<unsigned int>(d_count),
+			thrust::device_ptr<unsigned int>(d_count + N),
+			thrust::device_ptr<unsigned int>(d_count));
+		delete t;
+
 
 		return 0;
 		uint* h_count = new uint[N];
