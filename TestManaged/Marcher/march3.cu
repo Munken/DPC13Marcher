@@ -116,13 +116,40 @@ __global__
 		count[idx] = i;
 }
 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define CHECK_FOR_CUDA_ERROR() CHECK_FOR_CUDA_ERROR_FUNCTION(__FILE__,TOSTRING(__LINE__))
+
+void exit_with_error(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    fprintf(stderr, "error: ");
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+    exit(EXIT_FAILURE);
+}
+
+void CHECK_FOR_CUDA_ERROR_FUNCTION(const char* file, const char* line) {
+	cudaError_t errorCode = cudaGetLastError();
+	if (errorCode != cudaSuccess) {
+		exit_with_error("[file:%s line:%s] CUDA Error: %s", 
+                        file, line, cudaGetErrorString(errorCode) );
+	}
+    errorCode = cudaThreadSynchronize();
+    if (errorCode != cudaSuccess) {
+		exit_with_error("[file:%s line:%s] CUDA sync Error: %s", 
+                        file, line, cudaGetErrorString(errorCode) );
+    }
+}
+
 
 int main() {
 	allocateTables();
 	using namespace Gadgetron;
 
 	GPUTimer* t;
-	uint3 dims = make_uint3(20, 20, 20);
+	int n = 190;
+	uint3 dims = make_uint3(1, 1, 1) * n;
 	float3 min = make_float3(1, 1, 1)*-3;
 	float3 dx = make_float3(0.2f, 0.2f, 0.2f);
 
@@ -130,30 +157,39 @@ int main() {
 	uint* d_count;
 	float3* d_pos;
 
+	t = new GPUTimer("Malloc");
 	cudaMalloc((void **) &d_count, N*sizeof(uint));
 	cudaMalloc((void **) &d_pos, N*MAX_TRIANGLES*sizeof(float3));
+	delete t;
 
 	t = new GPUTimer("Running kernel");
-	simpleKernel <<< N/200, 200 >>> (0, dims, min, dx, d_pos, d_count);
+	simpleKernel <<< N/n, n >>> (0, dims, min, dx, d_pos, d_count);
 	delete t;
+	CHECK_FOR_CUDA_ERROR();
 
 	uint* h_count = new uint[N];
 	float3* h_pos = new float3[N*MAX_TRIANGLES];
+
+	t = new GPUTimer("Memcpy");
 	cudaMemcpy(h_count, d_count, N * sizeof(uint), cudaMemcpyDeviceToHost);
 	cudaMemcpy(h_pos, d_pos, N * MAX_TRIANGLES * sizeof(float3), cudaMemcpyDeviceToHost);
+	delete t;
+	CHECK_FOR_CUDA_ERROR();
 
-
+	uint count = 0;
 	for (uint i = 0; i < N; i++) {
 		uint h = h_count[i];
 		if (!h) continue;
+		count+=h;
 
-		cout << h << endl;
+		//cout << h << endl;
 		/*for (uint j = 0; j < h; j++) {
 			float3 f = h_pos[i*MAX_TRIANGLES + j];
 			cout << f.x << "    " << f.y << "     " << f.z << "     " << f.x*f.x + f.y*f.y + f.z*f.z << endl;
 		}
 		cout << endl;*/
 	}
+	cout << count << endl;
 	return 1;
 }
 }

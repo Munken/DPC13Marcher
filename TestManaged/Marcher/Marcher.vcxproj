@@ -103,6 +103,7 @@
     </CudaCompile>
     <CudaCompile>
       <NvccCompilation>compile</NvccCompilation>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

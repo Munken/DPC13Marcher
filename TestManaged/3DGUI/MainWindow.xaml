@@ -35,11 +35,11 @@
             <Viewport3D Name="mainViewport" ClipToBounds="True">
                 <Viewport3D.Camera>
                     <PerspectiveCamera 
-      FarPlaneDistance="100"
+      
       LookDirection="-11,-10,-9"
       UpDirection="0,1,0"
-      NearPlaneDistance="1" 
-      Position="11,10,9" 
+      
+      Position="6,5,4" 
       FieldOfView="70" />
                 </Viewport3D.Camera>
                 <ModelVisual3D>
