@@ -93,8 +93,10 @@ extern "C" {
 	}
 
 	__global__
-		void simpleKernel(float isoValue, dim3 dims, float3 minX, float3 dx, float3* out, uint* count) {
+		void fillTriangles(float isoValue, dim3 dims, float3 minX, float3 dx, float3* out, uint* vertexPrefix, uint N) {
 			uint idx = blockIdx.x*blockDim.x + threadIdx.x;
+
+			if (idx >= N) return;
 
 			uint3 co = idx_to_co(idx, dims);
 
@@ -154,19 +156,15 @@ extern "C" {
 			if (d_edgeTable[cubeindex] & 2048)
 				interpValues(isoValue,value[3],value[7],corners[3],corners[7], vertList[11]);
 
-			uint i = 0;
-			uint offset = idx*MAX_TRIANGLES;
-			count[idx] = 25;
+			
+			uint offset = vertexPrefix[idx];
 
-			for (; i < MAX_TRIANGLES; i++) {
+			for (uint i = 0; i < MAX_TRIANGLES; i++) {
 				uint edge = d_triTable[cubeindex][i];
-				count[idx] = i;
 				if (edge == 255) break;
 
 				out[offset + i] = vertList[edge];
 			}
-
-			count[idx] = i;
 	}
 
 	void exclusiveScan(uint* in, uint* out, uint N) {
@@ -206,7 +204,7 @@ extern "C" {
 		delete t;
 
 		t = new GPUTimer("Running kernel");
-		//simpleKernel <<< N/n, n >>> (0, dims, min, dx, d_pos, d_count);
+		//fillTriangles <<< N/n, n >>> (0, dims, min, dx, d_pos, d_count);
 		countKernel <<< N/n, n >>> (0, dims, min, dx, d_count, d_occupied);
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
@@ -230,7 +228,7 @@ extern "C" {
 		delete t;
 
 		t = new GPUTimer("Scan count");
-		exclusiveScan(d_occupied, d_occupiedScan, N+1);
+		exclusiveScan(d_count, d_count, N+1);
 		delete t;
 
 		t = new GPUTimer("Transfer last scan element");
@@ -243,6 +241,12 @@ extern "C" {
 		cudaMalloc((void **) &d_pos, nVertex*sizeof(float3));
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
+
+		t = new GPUTimer("Gen triangles");
+		fillTriangles <<< nVoxel / 32, 32 >>> (0, dims, min, dx, d_pos, d_count);
+		delete t;
+		CHECK_FOR_CUDA_ERROR();
+
 
 
 		return 0;
