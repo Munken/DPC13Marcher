@@ -188,12 +188,24 @@ extern "C" {
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
 
+		t = new GPUTimer("Transfer last");
+		uint nVertex = 0;
+		cudaMemcpy(&nVertex, (d_count + N - 1), sizeof(uint), cudaMemcpyDeviceToHost);
+		delete t;
+		CHECK_FOR_CUDA_ERROR();
+
 
 		t = new GPUTimer("Scan");
 		thrust::exclusive_scan(thrust::device_ptr<unsigned int>(d_count),
 			thrust::device_ptr<unsigned int>(d_count + N),
 			thrust::device_ptr<unsigned int>(d_count));
 		delete t;
+
+		uint tmp;
+		cudaMemcpy(&tmp, (d_count + N - 1), sizeof(uint), cudaMemcpyDeviceToHost);
+		nVertex += tmp;
+		cout << nVertex << endl;
+		CHECK_FOR_CUDA_ERROR();
 
 
 		return 0;
