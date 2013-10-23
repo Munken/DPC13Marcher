@@ -49,8 +49,11 @@ extern "C" {
 	}
 
 	__global__ 
-		void countKernel(float isoValue, dim3 dims, float3 minX, float3 dx, uint* count, uint* isOccupied) {
+		void countKernel(float isoValue, dim3 dims, float3 minX, float3 dx, uint* count, uint* isOccupied, uint N) {
 			uint idx = blockIdx.x*blockDim.x + threadIdx.x;
+
+			if (idx >= N) return;
+
 
 			uint3 co = idx_to_co(idx, dims);
 
@@ -171,17 +174,17 @@ extern "C" {
 	}
 
 	void exclusiveScan(uint* in, uint* out, uint N) {
-		thrust::exclusive_scan(thrust::device_ptr<unsigned int>(in),
+		/*thrust::exclusive_scan(thrust::device_ptr<unsigned int>(in),
 			thrust::device_ptr<unsigned int>(in + N),
-			thrust::device_ptr<unsigned int>(out));
+			thrust::device_ptr<unsigned int>(out));*/
 
-		//void *d_temp_storage = NULL;
-		//size_t temp_storage_bytes = 0;
-		//cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, in, out, N);
+		void *d_temp_storage = NULL;
+		size_t temp_storage_bytes = 0;
+		cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, in, out, N);
 
-		//cudaMalloc(&d_temp_storage, temp_storage_bytes);
-		//// Run reduction summation
-		//cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, in, out, N);
+		cudaMalloc(&d_temp_storage, temp_storage_bytes);
+		// Run reduction summation
+		cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, in, out, N);
 	}
 
 	uint retrieve(uint* array, uint element) {
@@ -194,9 +197,9 @@ extern "C" {
 		using namespace Gadgetron;
 		GPUTimer* t;
 
-		//t = new GPUTimer("Const alloc");
+		t = new GPUTimer("Const alloc");
 		allocateTables();
-		//delete t;
+		delete t;
 
 		int n = 100;
 		uint3 dims = make_uint3(1, 1, 1) * n;
@@ -208,18 +211,25 @@ extern "C" {
 		uint *d_occupied, *d_occupiedCompact, *d_occupiedScan;
 		float3* d_pos;
 
-		t = new GPUTimer("Malloc");
+
+		//t = new GPUTimer("Malloc");
 		cudaMalloc((void **) &d_count, (N+1)*sizeof(uint));
 		cudaMalloc((void **) &d_occupied, (N+1)*sizeof(uint));
 		cudaMalloc((void **) &d_occupiedScan, (N+1)*sizeof(uint));
-		delete t;
+		//delete t;
 
-		t = new GPUTimer("Running kernel");
-		//fillTriangles <<< N/n, n >>> (0, dims, min, dx, d_pos, d_count);
-		countKernel <<< N/200, 200 >>> (0, dims, min, dx, d_count, d_occupied);
+		//t = new GPUTimer("Running kernel");
+		cudaThreadSynchronize();
+		t = new GPUTimer("Total");
+
+		{
+		int blockSize = 12*32;
+		int nBlocks = N/blockSize + (N%blockSize != 0);
+		countKernel <<< nBlocks, blockSize >>> (0, dims, min, dx, d_count, d_occupied, N);
+		}
 		//cudaThreadSynchronize();
-		delete t;
-		CHECK_FOR_CUDA_ERROR();
+		//delete t;
+		//CHECK_FOR_CUDA_ERROR();
 
 		
 		//t = new GPUTimer("Scan occupied");
@@ -255,9 +265,11 @@ extern "C" {
 		//CHECK_FOR_CUDA_ERROR();
 
 		//t = new GPUTimer("Gen triangles");
+		{
 		int blockSize = 128;
 		int nBlocks = N/blockSize + (N%blockSize != 0);
 		fillTriangles <<< nBlocks, blockSize >>> (0, dims, min, dx, d_pos, d_count, nVoxel);
+		}
 		//delete t;
 		//CHECK_FOR_CUDA_ERROR();
 
@@ -265,7 +277,7 @@ extern "C" {
 		float3* h_pos = new float3[nVertex];
 		//t = new GPUTimer("Memcpy");
 		cudaMemcpy(h_pos, d_pos, nVertex * sizeof(float3), cudaMemcpyDeviceToHost);
-		//delete t;
+		delete t;
 		//CHECK_FOR_CUDA_ERROR();
 
 		return 0;
