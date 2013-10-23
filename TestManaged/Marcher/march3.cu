@@ -266,7 +266,7 @@ extern "C" {
 
 		//t = new GPUTimer("Gen triangles");
 		{
-		int blockSize = 128;
+		int blockSize = 5*32;
 		int nBlocks = N/blockSize + (N%blockSize != 0);
 		fillTriangles <<< nBlocks, blockSize >>> (0, dims, min, dx, d_pos, d_count, nVoxel);
 		}
