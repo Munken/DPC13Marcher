@@ -148,39 +148,45 @@ extern "C" {
 
 			float3 vertList[12];
 
-			if (getEdge(cubeindex) & 1)
+			//if (getEdge(cubeindex) & 1)
 				interpValues(isoValue,value[0],value[1],corners[0],corners[1], vertList[0]);
-			if (getEdge(cubeindex) & 2)
+			//if (getEdge(cubeindex) & 2)
 				interpValues(isoValue,value[1],value[2],corners[1],corners[2], vertList[1]);
-			if (getEdge(cubeindex) & 4)
+			//if (getEdge(cubeindex) & 4)
 				interpValues(isoValue,value[2],value[3],corners[2],corners[3], vertList[2]);
-			if (getEdge(cubeindex) & 8)
+			//if (getEdge(cubeindex) & 8)
 				interpValues(isoValue,value[3],value[0],corners[3],corners[0], vertList[3]);
-			if (getEdge(cubeindex) & 16)
+			//if (getEdge(cubeindex) & 16)
 				interpValues(isoValue,value[4],value[5],corners[4],corners[5], vertList[4]);
-			if (getEdge(cubeindex) & 32)
+			//if (getEdge(cubeindex) & 32)
 				interpValues(isoValue,value[5],value[6],corners[5],corners[6], vertList[5]);
-			if (getEdge(cubeindex) & 64)
+			//if (getEdge(cubeindex) & 64)
 				interpValues(isoValue,value[6],value[7],corners[6],corners[7], vertList[6]);
-			if (getEdge(cubeindex) & 128)
+			//if (getEdge(cubeindex) & 128)
 				interpValues(isoValue,value[7],value[4],corners[7],corners[4], vertList[7]);
-			if (getEdge(cubeindex) & 256)
+			//if (getEdge(cubeindex) & 256)
 				interpValues(isoValue,value[0],value[4],corners[0],corners[4], vertList[8]);
-			if (getEdge(cubeindex) & 512)
+			//if (getEdge(cubeindex) & 512)
 				interpValues(isoValue,value[1],value[5],corners[1],corners[5], vertList[9]);
-			if (getEdge(cubeindex) & 1024)
+			//if (getEdge(cubeindex) & 1024)
 				interpValues(isoValue,value[2],value[6],corners[2],corners[6], vertList[10]);
-			if (getEdge(cubeindex) & 2048)
+			//if (getEdge(cubeindex) & 2048)
 				interpValues(isoValue,value[3],value[7],corners[3],corners[7], vertList[11]);
 
 			
 			const uint offset = vertexPrefix[idx];
 
-			for (uint i = 0; i < MAX_TRIANGLES; i++) {
-				uint edge = d_triTable[cubeindex][i];
-				if (edge == 255) break;
+			for (uint i = 0; i < MAX_TRIANGLES; i+=3) {
+				uint edge0 = d_triTable[cubeindex][i];
+				uint edge1 = d_triTable[cubeindex][i+1];
+				uint edge2 = d_triTable[cubeindex][i+2];
 
-				out[offset + i] = vertList[edge];
+				if (edge0 == 255) break;
+
+				out[offset + i]     = vertList[edge0];
+				out[offset + i + 1] = vertList[edge1];
+				out[offset + i + 2] = vertList[edge2];
+
 			}
 	}
 
