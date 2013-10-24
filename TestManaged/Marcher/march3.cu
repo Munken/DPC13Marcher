@@ -273,7 +273,7 @@ extern "C" {
 
 		//t = new GPUTimer("Transfer last occupied element");
 		uint nVoxel = retrieve(d_occupiedScan, N);
-		//cout << nVoxel << endl;
+		cout << nVoxel << endl;
 		//delete t;
 
 		//t = new GPUTimer("Malloc compact");
@@ -294,7 +294,7 @@ extern "C" {
 
 		//t = new GPUTimer("Transfer last scan element");
 		uint nVertex = retrieve(d_count, N);
-		//cout << nVertex << endl;
+		cout << nVertex << endl;
 		//delete t;
 		//CHECK_FOR_CUDA_ERROR();
 
