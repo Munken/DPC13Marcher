@@ -24,7 +24,7 @@ extern "C" {
 	__constant__ uint d_triTable[TRI_ROWS][TRI_COLS];
 	//__constant__ uint d_countTable[TRI_ROWS];
 
-	texture<float, 1> countTex;
+	texture<uint, 1> countTex;
 
 	const uint MAX_TRIANGLES = 15;
 
@@ -34,11 +34,17 @@ extern "C" {
 		cudaMemcpyToSymbol(d_triTable, triTable, sizeof(triTable));
 		//cudaMemcpyToSymbol(d_countTable, numVertsTable, sizeof(numVertsTable));
 
-		cudaArray *dCountTable;
+		/*cudaArray *dCountTable;
 		cudaMallocArray(&dCountTable, &countTex.channelDesc, TRI_ROWS, 1);
 		cudaMemcpyToArray(dCountTable, 0, 0, numVertsTable, sizeof(numVertsTable), cudaMemcpyHostToDevice);
 		cudaBindTextureToArray(countTex, dCountTable);
-		CHECK_FOR_CUDA_ERROR();
+		CHECK_FOR_CUDA_ERROR();*/
+
+		uint* d_count;
+		cudaMalloc((void **) &d_count, sizeof(numVertsTable));
+		cudaMemcpy(d_count, numVertsTable, sizeof(numVertsTable), cudaMemcpyHostToDevice);
+		cudaBindTexture(NULL,countTex, d_count);
+
 	}
 
 	__device__ 
