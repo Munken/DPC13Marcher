@@ -22,7 +22,7 @@ extern "C" {
 
 	__constant__ uint d_edgeTable[EDGE_SIZE];
 	__constant__ uint d_triTable[TRI_ROWS][TRI_COLS];
-	__constant__ uint d_countTable[TRI_ROWS];
+	//__constant__ uint d_countTable[TRI_ROWS];
 
 	texture<float, 1> countTex;
 
@@ -32,12 +32,12 @@ extern "C" {
 	void allocateTables() {
 		cudaMemcpyToSymbol(d_edgeTable, edgeTable, sizeof(edgeTable));
 		cudaMemcpyToSymbol(d_triTable, triTable, sizeof(triTable));
-		cudaMemcpyToSymbol(d_countTable, numVertsTable, sizeof(numVertsTable));
+		//cudaMemcpyToSymbol(d_countTable, numVertsTable, sizeof(numVertsTable));
 
-		cudaArray *dArray;
-		cudaMallocArray(&dArray, &countTex.channelDesc, TRI_ROWS, 1);
-		cudaMemcpyToArray(dArray, 0, 0, numVertsTable, sizeof(numVertsTable), cudaMemcpyHostToDevice);
-		cudaBindTextureToArray(countTex, dArray);
+		cudaArray *dCountTable;
+		cudaMallocArray(&dCountTable, &countTex.channelDesc, TRI_ROWS, 1);
+		cudaMemcpyToArray(dCountTable, 0, 0, numVertsTable, sizeof(numVertsTable), cudaMemcpyHostToDevice);
+		cudaBindTextureToArray(countTex, dCountTable);
 		CHECK_FOR_CUDA_ERROR();
 	}
 
@@ -64,7 +64,8 @@ extern "C" {
 
 	__device__
 		inline uint getCount(uint i) {
-			return d_countTable[i];
+			//return d_countTable[i];
+			return tex1Dfetch(countTex, i);
 	}
 
 	__global__ 
