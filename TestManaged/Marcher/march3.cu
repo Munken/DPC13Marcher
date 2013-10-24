@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cuda.h>
+#include <texture_fetch_functions.h>
 #include "cuda_runtime.h"
 #include "typedefs.h"
 #include "device_launch_parameters.h"
@@ -23,6 +24,8 @@ extern "C" {
 	__constant__ uint d_triTable[TRI_ROWS][TRI_COLS];
 	__constant__ uint d_countTable[TRI_ROWS];
 
+	texture<float, 1> countTex;
+
 	const uint MAX_TRIANGLES = 15;
 
 
@@ -30,6 +33,12 @@ extern "C" {
 		cudaMemcpyToSymbol(d_edgeTable, edgeTable, sizeof(edgeTable));
 		cudaMemcpyToSymbol(d_triTable, triTable, sizeof(triTable));
 		cudaMemcpyToSymbol(d_countTable, numVertsTable, sizeof(numVertsTable));
+
+		cudaArray *dArray;
+		cudaMallocArray(&dArray, &countTex.channelDesc, TRI_ROWS, 1);
+		cudaMemcpyToArray(dArray, 0, 0, numVertsTable, sizeof(numVertsTable), cudaMemcpyHostToDevice);
+		cudaBindTextureToArray(countTex, dArray);
+		CHECK_FOR_CUDA_ERROR();
 	}
 
 	__device__ 
