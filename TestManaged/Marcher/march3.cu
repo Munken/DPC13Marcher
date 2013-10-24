@@ -204,7 +204,12 @@ extern "C" {
 		allocateTables();
 		delete t;
 
-		int n = 190;
+		
+		//cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
+		cudaFuncSetCacheConfig(countKernel, cudaFuncCachePreferL1);
+		cudaFuncSetCacheConfig(fillTriangles, cudaFuncCachePreferL1);
+		int n = 100;
 		uint3 dims = make_uint3(1, 1, 1) * n;
 		float3 min = make_float3(1, 1, 1)*-1.2f;
 		float3 dx = make_float3(1, 1, 1)*0.02f;
@@ -234,6 +239,7 @@ extern "C" {
 		//delete t;
 		//CHECK_FOR_CUDA_ERROR();
 
+		//cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
 		
 		//t = new GPUTimer("Scan occupied");
 		exclusiveScan(d_occupied, d_occupiedScan, N+1);
@@ -271,10 +277,11 @@ extern "C" {
 		//delete t;
 		//CHECK_FOR_CUDA_ERROR();
 
+		//cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
 		//t = new GPUTimer("Gen triangles");
 		{
 		int blockSize = 5*32;
-		int nBlocks = N/blockSize + (N%blockSize != 0);
+		int nBlocks = nVoxel/blockSize + (nVoxel%blockSize != 0);
 		fillTriangles <<< nBlocks, blockSize >>> (0, dims, min, dx, d_pos, d_count, nVoxel);
 		}
 		//delete t;
