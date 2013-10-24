@@ -48,6 +48,11 @@ extern "C" {
 			out = lerp(p0, p1, mu);
 	}
 
+	__device__
+		inline uint getEdge(uint i) {
+			return edgeTable[i];
+	}
+
 	__global__ 
 		void countKernel(float isoValue, dim3 dims, float3 minX, float3 dx, uint* count, uint* isOccupied, uint N) {
 			uint idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -137,29 +142,29 @@ extern "C" {
 
 			float3 vertList[12];
 
-			if (d_edgeTable[cubeindex] & 1)
+			if (getEdge(cubeindex) & 1)
 				interpValues(isoValue,value[0],value[1],corners[0],corners[1], vertList[0]);
-			if (d_edgeTable[cubeindex] & 2)
+			if (getEdge(cubeindex) & 2)
 				interpValues(isoValue,value[1],value[2],corners[1],corners[2], vertList[1]);
-			if (d_edgeTable[cubeindex] & 4)
+			if (getEdge(cubeindex) & 4)
 				interpValues(isoValue,value[2],value[3],corners[2],corners[3], vertList[2]);
-			if (d_edgeTable[cubeindex] & 8)
+			if (getEdge(cubeindex) & 8)
 				interpValues(isoValue,value[3],value[0],corners[3],corners[0], vertList[3]);
-			if (d_edgeTable[cubeindex] & 16)
+			if (getEdge(cubeindex) & 16)
 				interpValues(isoValue,value[4],value[5],corners[4],corners[5], vertList[4]);
-			if (d_edgeTable[cubeindex] & 32)
+			if (getEdge(cubeindex) & 32)
 				interpValues(isoValue,value[5],value[6],corners[5],corners[6], vertList[5]);
-			if (d_edgeTable[cubeindex] & 64)
+			if (getEdge(cubeindex) & 64)
 				interpValues(isoValue,value[6],value[7],corners[6],corners[7], vertList[6]);
-			if (d_edgeTable[cubeindex] & 128)
+			if (getEdge(cubeindex) & 128)
 				interpValues(isoValue,value[7],value[4],corners[7],corners[4], vertList[7]);
-			if (d_edgeTable[cubeindex] & 256)
+			if (getEdge(cubeindex) & 256)
 				interpValues(isoValue,value[0],value[4],corners[0],corners[4], vertList[8]);
-			if (d_edgeTable[cubeindex] & 512)
+			if (getEdge(cubeindex) & 512)
 				interpValues(isoValue,value[1],value[5],corners[1],corners[5], vertList[9]);
-			if (d_edgeTable[cubeindex] & 1024)
+			if (getEdge(cubeindex) & 1024)
 				interpValues(isoValue,value[2],value[6],corners[2],corners[6], vertList[10]);
-			if (d_edgeTable[cubeindex] & 2048)
+			if (getEdge(cubeindex) & 2048)
 				interpValues(isoValue,value[3],value[7],corners[3],corners[7], vertList[11]);
 
 			
