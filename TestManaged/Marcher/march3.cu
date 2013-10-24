@@ -249,7 +249,11 @@ extern "C" {
 		//delete t;
 
 		//t = new GPUTimer("Compact");
-		compact <<< N/n, n >>> (d_occupied, d_occupiedScan, d_occupiedCompact);
+		{
+		int blockSize = 1*n;
+		int nBlocks = N/blockSize + (N%blockSize != 0);
+		compact <<< nBlocks, blockSize >>> (d_occupied, d_occupiedScan, d_occupiedCompact);
+		}
 		//delete t;
 
 		//t = new GPUTimer("Scan count");
