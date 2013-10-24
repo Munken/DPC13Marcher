@@ -53,6 +53,11 @@ extern "C" {
 			return d_edgeTable[i];
 	}
 
+	__device__
+		inline uint getCount(uint i) {
+			return d_countTable[i];
+	}
+
 	__global__ 
 		void countKernel(float isoValue, dim3 dims, float3 minX, float3 dx, uint* count, uint* isOccupied, uint N) {
 			uint idx = blockIdx.x*blockDim.x + threadIdx.x;
@@ -89,7 +94,7 @@ extern "C" {
 			cubeindex += uint(func(corners[6]) < isoValue)*64; 
 			cubeindex += uint(func(corners[7]) < isoValue)*128;
 
-			uint nVertices = d_countTable[cubeindex];
+			uint nVertices = getCount(cubeindex);
 			count[idx] = nVertices;
 			isOccupied[idx] = nVertices > 0;
 	}
@@ -103,12 +108,13 @@ extern "C" {
 	}
 
 	__global__
-		void fillTriangles(float isoValue, dim3 dims, float3 minX, float3 dx, float3* out, uint* vertexPrefix, uint N) {
+		void fillTriangles(float isoValue, dim3 dims, float3 minX, float3 dx, float3* out, uint* vertexPrefix, uint* occupied, uint N) {
 			uint idx = blockIdx.x*blockDim.x + threadIdx.x;
 
 			if (idx >= N) return;
 
-			uint3 co = idx_to_co(idx, dims);
+			uint cIdx = occupied[idx];
+			uint3 co = idx_to_co(cIdx, dims);
 
 			float3 corners[8];
 			corners[0] = cornerValue(co, minX, dx);
@@ -287,7 +293,7 @@ extern "C" {
 		{
 		int blockSize = 5*32;
 		int nBlocks = nVoxel/blockSize + (nVoxel%blockSize != 0);
-		fillTriangles <<< nBlocks, blockSize >>> (0, dims, min, dx, d_pos, d_count, nVoxel);
+		fillTriangles <<< nBlocks, blockSize >>> (0, dims, min, dx, d_pos, d_count, d_occupiedCompact, nVoxel);
 		}
 		//delete t;
 		//CHECK_FOR_CUDA_ERROR();
