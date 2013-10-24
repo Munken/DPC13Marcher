@@ -50,7 +50,7 @@ extern "C" {
 
 	__device__
 		inline uint getEdge(uint i) {
-			return edgeTable[i];
+			return d_edgeTable[i];
 	}
 
 	__global__ 
