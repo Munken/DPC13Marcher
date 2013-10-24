@@ -78,21 +78,21 @@ extern "C" {
 			corners[6] = corners[0] + make_float3(dx.x, dx.y, dx.z);
 			corners[7] = corners[0] + make_float3(0,    dx.y, dx.z);
 
-//			float value[8];
-//#pragma unroll 8
-//			for (int i = 0; i < 8; i++) {
-//				value[i] = func(corners[i]);
-//			}
+			float value[8];
+			#pragma unroll 8
+			for (int i = 0; i < 8; i++) {
+				value[i] = func(corners[i]);
+			}
 
 			uint cubeindex;
-			cubeindex =  uint(func(corners[0]) < isoValue); 
-			cubeindex += uint(func(corners[1]) < isoValue)*2; 
-			cubeindex += uint(func(corners[2]) < isoValue)*4; 
-			cubeindex += uint(func(corners[3]) < isoValue)*8; 
-			cubeindex += uint(func(corners[4]) < isoValue)*16; 
-			cubeindex += uint(func(corners[5]) < isoValue)*32; 
-			cubeindex += uint(func(corners[6]) < isoValue)*64; 
-			cubeindex += uint(func(corners[7]) < isoValue)*128;
+			cubeindex =  uint(value[0] < isoValue); 
+			cubeindex += uint(value[1] < isoValue)*2; 
+			cubeindex += uint(value[2] < isoValue)*4; 
+			cubeindex += uint(value[3] < isoValue)*8; 
+			cubeindex += uint(value[4] < isoValue)*16; 
+			cubeindex += uint(value[5] < isoValue)*32; 
+			cubeindex += uint(value[6] < isoValue)*64; 
+			cubeindex += uint(value[7] < isoValue)*128;
 
 			uint nVertices = getCount(cubeindex);
 			count[idx] = nVertices;
