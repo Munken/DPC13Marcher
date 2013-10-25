@@ -226,7 +226,7 @@ extern "C" {
 		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
 		cudaFuncSetCacheConfig(countKernel, cudaFuncCachePreferL1);
 		cudaFuncSetCacheConfig(fillTriangles, cudaFuncCachePreferL1);
-		int n = 100;
+		int n = 190;
 		uint3 dims = make_uint3(1, 1, 1) * n;
 		float3 min = make_float3(1, 1, 1)*-1.2f;
 		float3 dx = make_float3(1, 1, 1)*0.02f;
@@ -264,7 +264,7 @@ extern "C" {
 
 		//t = new GPUTimer("Transfer last occupied element");
 		uint nVoxel = retrieve(d_occupiedScan, N);
-		//cout << nVoxel << endl;
+		cout << nVoxel << endl;
 		//delete t;
 
 		//t = new GPUTimer("Malloc compact");
@@ -285,7 +285,7 @@ extern "C" {
 
 		//t = new GPUTimer("Transfer last scan element");
 		uint nVertex = retrieve(d_count, N);
-		//cout << nVertex << endl;
+		cout << nVertex << endl;
 		//delete t;
 		//CHECK_FOR_CUDA_ERROR();
 
