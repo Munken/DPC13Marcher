@@ -1,24 +1,5 @@
 #include "typedefs.h"
 
-/*
- * Copyright 1993-2009 NVIDIA Corporation.  All rights reserved.
- *
- * NVIDIA Corporation and its licensors retain all intellectual property and 
- * proprietary rights in and to this software and related documentation and 
- * any modifications thereto.  Any use, reproduction, disclosure, or distribution 
- * of this software and related documentation without an express license 
- * agreement from NVIDIA Corporation is strictly prohibited.
- * 
- */
- 
- /*
-    Tables for Marching Cubes
-    http://local.wasp.uwa.edu.au/~pbourke/geometry/polygonise/
-*/
-
-// edge table maps 8-bit flag representing which cube vertices are inside
-// the isosurface to 12-bit number indicating which edges are intersected
-
 const size_t EDGE_SIZE = 256;
 uint edgeTable[EDGE_SIZE] = {
     0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
