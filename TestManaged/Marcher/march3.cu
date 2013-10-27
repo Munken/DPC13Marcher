@@ -19,7 +19,6 @@ using namespace std;
 
 extern "C" {
 
-	__constant__ uint d_edgeTable[EDGE_SIZE];
 	__constant__ uint d_triTable[TRI_ROWS][TRI_COLS];
 	__constant__ uint d_countTable[TRI_ROWS];
 
@@ -27,7 +26,6 @@ extern "C" {
 
 
 	void allocateTables() {
-		cudaMemcpyToSymbol(d_edgeTable, edgeTable, sizeof(edgeTable));
 		cudaMemcpyToSymbol(d_triTable, triTable, sizeof(triTable));
 		cudaMemcpyToSymbol(d_countTable, numVertsTable, sizeof(numVertsTable));
 	}
@@ -48,10 +46,6 @@ extern "C" {
 			out = lerp(p0, p1, mu);
 	}
 
-	__device__
-		inline uint getEdge(uint i) {
-			return d_edgeTable[i];
-	}
 
 	__device__
 		inline uint getCount(uint i) {
@@ -59,7 +53,7 @@ extern "C" {
 	}
 
 	__global__ 
-		void countKernel(float isoValue, dim3 dims, float3 minX, float3 dx, uint* count, uint* isOccupied, uint N) {
+		void countKernel(float isoValue, dim3 dims, float3 minX, float3 dx, uint* count, uint* isActive, uint N) {
 			uint idx = blockIdx.x*blockDim.x + threadIdx.x;
 
 			if (idx >= N) return;
@@ -96,24 +90,24 @@ extern "C" {
 
 			uint nVertices = getCount(cubeindex);
 			count[idx] = nVertices;
-			isOccupied[idx] = nVertices > 0;
+			isActive[idx] = nVertices > 0;
 	}
 
 	__global__
-		void compact(uint* isOccupied, uint* occupiedScan, uint* occupiedCompact, uint N) {
+		void compact(uint* isActive, uint* activeScan, uint* activeCompact, uint N) {
 			uint idx = blockIdx.x*blockDim.x + threadIdx.x;
-			if (idx < N && isOccupied[idx]) {
-				occupiedCompact[occupiedScan[idx]] = idx;
+			if (idx < N && isActive[idx]) {
+				activeCompact[activeScan[idx]] = idx;
 			}
 	}
 
 	__global__
-		void fillTriangles(float isoValue, dim3 dims, float3 minX, float3 dx, float3* out, uint* vertexPrefix, uint* occupied, uint N) {
+		void fillTriangles(float isoValue, dim3 dims, float3 minX, float3 dx, float3* out, uint* vertexPrefix, uint* cubeIndex, uint N) {
 			uint idx = blockIdx.x*blockDim.x + threadIdx.x;
 
 			if (idx >= N) return;
 
-			uint cIdx = occupied[idx];
+			uint cIdx = cubeIndex[idx];
 			uint3 co = idx_to_co(cIdx, dims);
 
 			float3 corners[8];
@@ -144,39 +138,22 @@ extern "C" {
 			cubeindex += uint(value[6] < isoValue)*64; 
 			cubeindex += uint(value[7] < isoValue)*128;
 
-
-
 			float3 vertList[12];
-
-			//if (getEdge(cubeindex) & 1)
-				interpValues(isoValue,value[0],value[1],corners[0],corners[1], vertList[0]);
-			//if (getEdge(cubeindex) & 2)
-				interpValues(isoValue,value[1],value[2],corners[1],corners[2], vertList[1]);
-			//if (getEdge(cubeindex) & 4)
-				interpValues(isoValue,value[2],value[3],corners[2],corners[3], vertList[2]);
-			//if (getEdge(cubeindex) & 8)
-				interpValues(isoValue,value[3],value[0],corners[3],corners[0], vertList[3]);
-			//if (getEdge(cubeindex) & 16)
-				interpValues(isoValue,value[4],value[5],corners[4],corners[5], vertList[4]);
-			//if (getEdge(cubeindex) & 32)
-				interpValues(isoValue,value[5],value[6],corners[5],corners[6], vertList[5]);
-			//if (getEdge(cubeindex) & 64)
-				interpValues(isoValue,value[6],value[7],corners[6],corners[7], vertList[6]);
-			//if (getEdge(cubeindex) & 128)
-				interpValues(isoValue,value[7],value[4],corners[7],corners[4], vertList[7]);
-			//if (getEdge(cubeindex) & 256)
-				interpValues(isoValue,value[0],value[4],corners[0],corners[4], vertList[8]);
-			//if (getEdge(cubeindex) & 512)
-				interpValues(isoValue,value[1],value[5],corners[1],corners[5], vertList[9]);
-			//if (getEdge(cubeindex) & 1024)
-				interpValues(isoValue,value[2],value[6],corners[2],corners[6], vertList[10]);
-			//if (getEdge(cubeindex) & 2048)
-				interpValues(isoValue,value[3],value[7],corners[3],corners[7], vertList[11]);
+			interpValues(isoValue,value[0],value[1],corners[0],corners[1], vertList[0]);
+			interpValues(isoValue,value[1],value[2],corners[1],corners[2], vertList[1]);
+			interpValues(isoValue,value[2],value[3],corners[2],corners[3], vertList[2]);
+			interpValues(isoValue,value[3],value[0],corners[3],corners[0], vertList[3]);
+			interpValues(isoValue,value[4],value[5],corners[4],corners[5], vertList[4]);
+			interpValues(isoValue,value[5],value[6],corners[5],corners[6], vertList[5]);
+			interpValues(isoValue,value[6],value[7],corners[6],corners[7], vertList[6]);
+			interpValues(isoValue,value[7],value[4],corners[7],corners[4], vertList[7]);
+			interpValues(isoValue,value[0],value[4],corners[0],corners[4], vertList[8]);
+			interpValues(isoValue,value[1],value[5],corners[1],corners[5], vertList[9]);
+			interpValues(isoValue,value[2],value[6],corners[2],corners[6], vertList[10]);
+			interpValues(isoValue,value[3],value[7],corners[3],corners[7], vertList[11]);
 
 			
 			const uint offset = vertexPrefix[idx];
-			//const uint nVertice = d_countTable[cubeindex];
-
 			#pragma unroll
 			for (uint i = 0; i < MAX_TRIANGLES; i+=3) {
 				uint edge0 = d_triTable[cubeindex][i];
@@ -193,10 +170,6 @@ extern "C" {
 	}
 
 	void exclusiveScan(uint* in, uint* out, uint N) {
-		/*thrust::exclusive_scan(thrust::device_ptr<unsigned int>(in),
-			thrust::device_ptr<unsigned int>(in + N),
-			thrust::device_ptr<unsigned int>(out));*/
-
 		using namespace cub;
 		void *d_temp_storage = NULL;
 		size_t temp_storage_bytes = 0;
@@ -206,7 +179,7 @@ extern "C" {
 		// Run exclusive prefix sum
 		DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, in, out, N);
 
-		cudaFree(d_temp_storage);
+		cudaFree(d_temp_storage); // Delete tmp
 	}
 
 	uint retrieve(uint* array, uint element) {
@@ -223,12 +196,13 @@ extern "C" {
 		allocateTables();
 		delete t;
 
-		
-		//cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
+		// Config cache 
 		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
 		cudaFuncSetCacheConfig(countKernel, cudaFuncCachePreferL1);
 		cudaFuncSetCacheConfig(fillTriangles, cudaFuncCachePreferL1);
 		cudaFuncSetCacheConfig(compact, cudaFuncCachePreferL1);
+
+		// Input param
 		int n = 260;
 		uint3 dims = make_uint3(1, 1, 1) * n;
 		float3 min = make_float3(1, 1, 1)*-1.05f;
@@ -236,87 +210,55 @@ extern "C" {
 
 		const uint N = prod(dims);
 		uint* d_count;
-		uint *d_occupied, *d_occupiedCompact, *d_occupiedScan;
+		uint *d_active, *d_activeCompact, *d_activeSum;
 		float3* d_pos;
 
-
-		//t = new GPUTimer("Malloc");
 		cudaMalloc((void **) &d_count, (N+1)*sizeof(uint));
-		cudaMalloc((void **) &d_occupied, (N+1)*sizeof(uint));
-		cudaMalloc((void **) &d_occupiedScan, (N+1)*sizeof(uint));
-		//delete t;
+		cudaMalloc((void **) &d_active, (N+1)*sizeof(uint));
+		cudaMalloc((void **) &d_activeSum, (N+1)*sizeof(uint));
 		CHECK_FOR_CUDA_ERROR();
 
-		//t = new GPUTimer("Running kernel");
-		cudaThreadSynchronize();
+		cudaThreadSynchronize(); // Just for timer
 		t = new GPUTimer("Total");
 
-		{
-		int blockSize = 12*32;
-		int nBlocks = N/blockSize + (N%blockSize != 0);
-		countKernel <<< nBlocks, blockSize >>> (0, dims, min, dx, d_count, d_occupied, N);
+		{ // Classify
+			int blockSize = 12*32;
+			int nBlocks = N/blockSize + (N%blockSize != 0);
+			countKernel <<< nBlocks, blockSize >>> (0, dims, min, dx, d_count, d_active, N);
 		}
-		//cudaThreadSynchronize();
-		//delete t;
-		//CHECK_FOR_CUDA_ERROR();
 
-		//cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
+		// Determine number of active voxels
+		exclusiveScan(d_active, d_activeSum, N+1);
+		uint nVoxel = retrieve(d_activeSum, N);
 		
-		//t = new GPUTimer("Scan occupied");
-		exclusiveScan(d_occupied, d_occupiedScan, N+1);
-		//delete t;
-		//CHECK_FOR_CUDA_ERROR();
-
-		//t = new GPUTimer("Transfer last occupied element");
-		uint nVoxel = retrieve(d_occupiedScan, N);
 		cout << "Voxel" << nVoxel << endl;
-		//delete t;
-		//CHECK_FOR_CUDA_ERROR();
-
-		//t = new GPUTimer("Malloc compact");
-		cudaMalloc((void **) &d_occupiedCompact, nVoxel*sizeof(uint));
-		//delete t;
-		//CHECK_FOR_CUDA_ERROR();
-		if(nVoxel == 0)
+		if(nVoxel == 0) { // Bail out
+			cout << "No triangles needed" << endl;
 			return 0;
-
-		//t = new GPUTimer("Compact");
-		{
-		int blockSize = 12*32;
-		int nBlocks = N/blockSize + (N%blockSize != 0);
-		compact <<< nBlocks, blockSize >>> (d_occupied, d_occupiedScan, d_occupiedCompact, N);
 		}
-		//delete t;
 
-		//t = new GPUTimer("Scan count");
+		{ // Compact stream
+			cudaMalloc((void **) &d_activeCompact, nVoxel*sizeof(uint));
+			int blockSize = 12*32;
+			int nBlocks = N/blockSize + (N%blockSize != 0);
+			compact <<< nBlocks, blockSize >>> (d_active, d_activeSum, d_activeCompact, N);
+		}
+
+		// Determine vertice count
 		exclusiveScan(d_count, d_count, N+1);
-		//delete t;
-
-		//t = new GPUTimer("Transfer last scan element");
 		uint nVertex = retrieve(d_count, N);
 		cout << nVertex << endl;
-		//delete t;
-		//CHECK_FOR_CUDA_ERROR();
-		//CHECK_FOR_CUDA_ERROR();
 
-		//t = new GPUTimer("Alloc vertex array");
-		cudaMalloc((void **) &d_pos, nVertex*sizeof(float3));
-		//delete t;
-		//CHECK_FOR_CUDA_ERROR();
+		{ // Generate triangles
+			cudaMalloc((void **) &d_pos, nVertex*sizeof(float3)); // Alloc only needed
 
-		//cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
-		//t = new GPUTimer("Gen triangles");
-		{
-		int blockSize = 5*32;
-		int nBlocks = nVoxel/blockSize + (nVoxel%blockSize != 0);
-		fillTriangles <<< nBlocks, blockSize >>> (0, dims, min, dx, d_pos, d_count, d_occupiedCompact, nVoxel);
+			int blockSize = 5*32;
+			int nBlocks = nVoxel/blockSize + (nVoxel%blockSize != 0);
+			fillTriangles <<< nBlocks, blockSize >>> (0, dims, min, dx, d_pos, d_count, d_activeCompact, nVoxel);
 		}
-		//delete t;
-		//CHECK_FOR_CUDA_ERROR();
-
-
+		
+		// Transfer back
 		float3* h_pos = new float3[nVertex];
-		//t = new GPUTimer("Memcpy");
 		cudaMemcpy(h_pos, d_pos, nVertex * sizeof(float3), cudaMemcpyDeviceToHost);
 		delete t;
 		CHECK_FOR_CUDA_ERROR();
