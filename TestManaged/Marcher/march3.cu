@@ -79,7 +79,7 @@ extern "C" {
 			corners[7] = corners[0] + make_float3(0,    dx.y, dx.z);
 
 			float value[8];
-			#pragma unroll 8
+			#pragma unroll
 			for (int i = 0; i < 8; i++) {
 				value[i] = func(corners[i]);
 			}
@@ -100,9 +100,9 @@ extern "C" {
 	}
 
 	__global__
-		void compact(uint* isOccupied, uint* occupiedScan, uint* occupiedCompact) {
+		void compact(uint* isOccupied, uint* occupiedScan, uint* occupiedCompact, uint N) {
 			uint idx = blockIdx.x*blockDim.x + threadIdx.x;
-			if (isOccupied[idx]) {
+			if (idx < N && isOccupied[idx]) {
 				occupiedCompact[occupiedScan[idx]] = idx;
 			}
 	}
@@ -129,7 +129,7 @@ extern "C" {
 
 			float value[8];
 
-#pragma unroll 8
+			#pragma unroll
 			for (int i = 0; i < 8; i++) {
 				value[i] = func(corners[i]);
 			}
@@ -175,7 +175,9 @@ extern "C" {
 
 			
 			const uint offset = vertexPrefix[idx];
+			//const uint nVertice = d_countTable[cubeindex];
 
+			#pragma unroll
 			for (uint i = 0; i < MAX_TRIANGLES; i+=3) {
 				uint edge0 = d_triTable[cubeindex][i];
 				uint edge1 = d_triTable[cubeindex][i+1];
@@ -226,10 +228,11 @@ extern "C" {
 		cudaDeviceSetCacheConfig(cudaFuncCachePreferShared);
 		cudaFuncSetCacheConfig(countKernel, cudaFuncCachePreferL1);
 		cudaFuncSetCacheConfig(fillTriangles, cudaFuncCachePreferL1);
-		int n = 190;
+		cudaFuncSetCacheConfig(compact, cudaFuncCachePreferL1);
+		int n = 260;
 		uint3 dims = make_uint3(1, 1, 1) * n;
-		float3 min = make_float3(1, 1, 1)*-1.2f;
-		float3 dx = make_float3(1, 1, 1)*0.02f;
+		float3 min = make_float3(1, 1, 1)*-1.05f;
+		float3 dx = make_float3(1, 1, 1)*0.005f;
 
 		const uint N = prod(dims);
 		uint* d_count;
@@ -242,6 +245,7 @@ extern "C" {
 		cudaMalloc((void **) &d_occupied, (N+1)*sizeof(uint));
 		cudaMalloc((void **) &d_occupiedScan, (N+1)*sizeof(uint));
 		//delete t;
+		CHECK_FOR_CUDA_ERROR();
 
 		//t = new GPUTimer("Running kernel");
 		cudaThreadSynchronize();
@@ -261,21 +265,26 @@ extern "C" {
 		//t = new GPUTimer("Scan occupied");
 		exclusiveScan(d_occupied, d_occupiedScan, N+1);
 		//delete t;
+		//CHECK_FOR_CUDA_ERROR();
 
 		//t = new GPUTimer("Transfer last occupied element");
 		uint nVoxel = retrieve(d_occupiedScan, N);
-		cout << nVoxel << endl;
+		cout << "Voxel" << nVoxel << endl;
 		//delete t;
+		//CHECK_FOR_CUDA_ERROR();
 
 		//t = new GPUTimer("Malloc compact");
 		cudaMalloc((void **) &d_occupiedCompact, nVoxel*sizeof(uint));
 		//delete t;
+		//CHECK_FOR_CUDA_ERROR();
+		if(nVoxel == 0)
+			return 0;
 
 		//t = new GPUTimer("Compact");
 		{
-		int blockSize = 1*n;
+		int blockSize = 12*32;
 		int nBlocks = N/blockSize + (N%blockSize != 0);
-		compact <<< nBlocks, blockSize >>> (d_occupied, d_occupiedScan, d_occupiedCompact);
+		compact <<< nBlocks, blockSize >>> (d_occupied, d_occupiedScan, d_occupiedCompact, N);
 		}
 		//delete t;
 
@@ -287,6 +296,7 @@ extern "C" {
 		uint nVertex = retrieve(d_count, N);
 		cout << nVertex << endl;
 		//delete t;
+		//CHECK_FOR_CUDA_ERROR();
 		//CHECK_FOR_CUDA_ERROR();
 
 		//t = new GPUTimer("Alloc vertex array");
@@ -309,7 +319,7 @@ extern "C" {
 		//t = new GPUTimer("Memcpy");
 		cudaMemcpy(h_pos, d_pos, nVertex * sizeof(float3), cudaMemcpyDeviceToHost);
 		delete t;
-		//CHECK_FOR_CUDA_ERROR();
+		CHECK_FOR_CUDA_ERROR();
 
 		return 0;
 		
