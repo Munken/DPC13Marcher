@@ -43,7 +43,7 @@ extern "C" {
 	__device__ 
 		inline void interpValues(float isoValue, const float v0, const float v1, float3 p0, float3 p1, float3& out) {
 			float mu = (isoValue - v0) / (v1 - v0);
-			out = lerp(p0, p1, mu);
+			out = p0 + mu*(p1-p0);
 	}
 
 
